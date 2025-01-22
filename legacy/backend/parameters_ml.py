@@ -8,7 +8,7 @@ from config import Config
 def initialize_llm():
     os.environ["GROQ_API_KEY"] = Config.GROQ_AI_KEY
     return ChatGroq(
-        model="llama3-8b",
+        model="mixtral-8x7b-32768",
         temperature=0,
         max_tokens=None,
         timeout=None,

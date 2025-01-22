@@ -76,33 +76,33 @@ def create_medical_report(health_data, symptoms, metrics_list):
         return json.dumps(fallback_report, indent=2)
 
 def generate_ai_report(metrics_list, health_data_json, selected_symptoms):
-    try:
-        health_data = json.loads(health_data_json)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON data: {e}")
+    # try:
+    #     health_data = json.loads(health_data_json)
+    # except json.JSONDecodeError as e:
+    #     raise ValueError(f"Invalid JSON data: {e}")
 
-    return create_medical_report(health_data, selected_symptoms, metrics_list)
+    return create_medical_report(health_data_json, selected_symptoms, metrics_list)
 
-if __name__ == "__main__":
-    metrics = [
-        "respiratory_rate",
-        "heart_rate",
-        "walking_heart_rate_average",
-        "blood_oxygen_saturation",
-        "sleep_analysis",
-        "physical_effort",
-        "resting_heart_rate"
-    ]
-    symptoms = ["Shortness of breath", "Fatigue", "Dizziness when standing"]
+# if __name__ == "__main__":
+#     metrics = [
+#         "respiratory_rate",
+#         "heart_rate",
+#         "walking_heart_rate_average",
+#         "blood_oxygen_saturation",
+#         "sleep_analysis",
+#         "physical_effort",
+#         "resting_heart_rate"
+#     ]
+#     symptoms = ["Shortness of breath", "Fatigue", "Dizziness when standing"]
     
-    try:
-        with open('data.json', 'r') as f:
-            health_data = f.read()
-        # Will Add JSON FROM FLASH
-        Vital_Metric_Model_ML = get_key_metrics(symptoms)
-        report = generate_ai_report(Vital_Metric_Model_ML, health_data, symptoms)
-        print(report)
-    except FileNotFoundError:
-        print(json.dumps({"error": "data.json file not found"}, indent=2))
-    except ValueError as e:
-        print(json.dumps({"error": str(e)}, indent=2))
+#     try:
+#         with open('data.json', 'r') as f:
+#             health_data = f.read()
+#         # Will Add JSON FROM FLASH
+#         Vital_Metric_Model_ML = get_key_metrics(symptoms)
+#         report = generate_ai_report(Vital_Metric_Model_ML, health_data, symptoms)
+#         print(report)
+#     except FileNotFoundError:
+#         print(json.dumps({"error": "data.json file not found"}, indent=2))
+#     except ValueError as e:
+#         print(json.dumps({"error": str(e)}, indent=2))

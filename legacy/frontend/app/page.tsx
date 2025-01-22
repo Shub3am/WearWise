@@ -158,8 +158,8 @@ export default function Home() {
             About WearWises
           </h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-            WearWise is an innovative AI Health Diagnosing system that combines
-            your Smart Watch's data with reported symptoms to provide
+            WearWise is an innovative AI Health Diagnosing Application that
+            combines your Smart Watch's data with reported symptoms to provide
             comprehensive health insights. Our platform helps you better
             understand your health patterns and make informed decisions about
             your well-being.

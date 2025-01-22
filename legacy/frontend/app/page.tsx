@@ -115,15 +115,6 @@ export default function Home() {
         collectSymptoms.push(i);
       }
     });
-    console.log(
-      uploadedWatchMetric.data,
-      collectSymptoms,
-      "fel",
-      JSON.stringify({
-        watch_metrics: uploadedWatchMetric,
-        symptoms: { symptoms: collectSymptoms },
-      })
-    );
 
     // let getData = await fetch("http://localhost:5000/diagnose", {
     //   method: "POST",
@@ -151,10 +142,10 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Navbar */}
       <nav className="bg-white border-b shadow-sm">
-        <div className="max-w-5xl mx-auto flex h-16 items-center px-4">
+        <div className="max-w-5xl mx-auto flex h-16 items-center justify-center px-4 ">
           <Stethoscope className="h-6 w-6 text-blue-600 mr-2" />
           <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            HealthTrack
+            WearWise
           </h1>
         </div>
       </nav>
@@ -164,14 +155,22 @@ export default function Home() {
         {/* About Section */}
         <section className="mb-12 text-center">
           <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            About HealthTrack
+            About WearWises
           </h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-            HealthTrack is an innovative health monitoring system that combines
-            your Apple Watch data with symptom tracking to provide comprehensive
-            health insights. Our platform helps you better understand your
-            health patterns and make informed decisions about your well-being.
+            WearWise is an innovative AI Health Diagnosing system that combines
+            your Smart Watch's data with reported symptoms to provide
+            comprehensive health insights. Our platform helps you better
+            understand your health patterns and make informed decisions about
+            your well-being.
           </p>
+          <div className="border mt-4 p-2">
+            {" "}
+            <p className=" ">
+              By Team OnCall Engineers, Built for Code For Bharat Season 1, 2025
+            </p>{" "}
+            <p className="mt-4">By Shubham, Harsh, Sahil and Yashi</p>
+          </div>
         </section>
 
         {/* How It Works Section */}
@@ -189,8 +188,8 @@ export default function Home() {
                   Data Collection
                 </h3>
                 <p className="text-blue-600 text-center">
-                  Seamlessly collect health data from your Apple Watch and
-                  combine it with your reported symptoms
+                  Seamlessly Integrate your health data from your Smarth Watch
+                  and combine it with your reported symptoms
                 </p>
               </CardContent>
             </Card>
@@ -203,8 +202,8 @@ export default function Home() {
                   AI Analysis
                 </h3>
                 <p className="text-indigo-600 text-center">
-                  Advanced AI algorithms analyze your data to identify patterns
-                  and potential health insights
+                  Advanced AI RAG based algorithms analyze your data to identify
+                  patterns and potential health insights
                 </p>
               </CardContent>
             </Card>
@@ -228,7 +227,7 @@ export default function Home() {
         {/* Why This Application Section */}
         <section className="mb-12">
           <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent text-center">
-            Why HealthTrack?
+            Why WearWise?
           </h2>
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <Card className="bg-gradient-to-br from-purple-50 to-pink-100 border-purple-200">
@@ -237,21 +236,21 @@ export default function Home() {
                   Comprehensive Health Monitoring
                 </h3>
                 <p className="text-purple-700 text-center">
-                  By combining Apple Watch data with your reported symptoms, we
-                  provide a complete picture of your health status and trends
-                  over time.
+                  By combining your Vital Smart Watch data, we provide a
+                  complete picture of your health status that sometimes get
+                  missed by the patient like sleep, excerise and blood oxygen.
                 </p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-br from-blue-50 to-cyan-100 border-blue-200">
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4 text-blue-800 text-center">
-                  AI-Powered Insights
+                  Saves Time
                 </h3>
                 <p className="text-blue-700 text-center">
-                  Our advanced AI models analyze your health data to detect
-                  patterns and provide personalized recommendations for
-                  improving your well-being.
+                  Smartwatch health data can provide valuable initial insights
+                  that doctors typically gather during routine checkups which
+                  doctors use to diagnose a patient on less-chronic level
                 </p>
               </CardContent>
             </Card>
@@ -395,12 +394,14 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                <input
-                  type="file"
-                  accept=".json,application/json"
-                  onChange={handleChange}
-                />
-
+                <div className="flex m-auto justify-center items-center p-2 gap-4 border border-black">
+                  <p>Upload Your Smart Watch's Health Data: </p>
+                  <input
+                    type="file"
+                    accept=".json,application/json"
+                    onChange={handleChange}
+                  />
+                </div>
                 <Button
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
@@ -411,8 +412,8 @@ export default function Home() {
           </CardContent>
         </Card>
         {/* Health Report Section */}
-        {!HealthData && (
-          <section className="mb-12">
+        {Object.keys(HealthData).length ? (
+          <section className="mb-12 border p-5 shadow-md rounded-md">
             <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent text-center">
               Your Health Report
             </h2>
@@ -542,6 +543,8 @@ export default function Home() {
               </Card>
             </div>
           </section>
+        ) : (
+          ""
         )}
 
         {/* Footer */}
@@ -559,6 +562,10 @@ export default function Home() {
                   <div className="flex items-center gap-2 justify-center">
                     <Code className="h-5 w-5 text-blue-600" />
                     <span>Next.js 13</span>
+                  </div>{" "}
+                  <div className="flex items-center gap-2 justify-center">
+                    <Code className="h-5 w-5 text-blue-600" />
+                    <span>Flask</span>
                   </div>
                   <div className="flex items-center gap-2 justify-center">
                     <Code className="h-5 w-5 text-blue-600" />
@@ -573,11 +580,19 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 justify-center">
                     <Brain className="h-5 w-5 text-indigo-600" />
-                    <span>RAG</span>
+                    <span>RAG Methodology</span>
+                  </div>{" "}
+                  <div className="flex items-center gap-2 justify-center">
+                    <Brain className="h-5 w-5 text-indigo-600" />
+                    <span>LangChain</span>
                   </div>
                   <div className="flex items-center gap-2 justify-center">
                     <Database className="h-5 w-5 text-indigo-600" />
                     <span>Chroma DB</span>
+                  </div>{" "}
+                  <div className="flex items-center gap-2 justify-center">
+                    <Database className="h-5 w-5 text-indigo-600" />
+                    <span>OpenAI Embeddings</span>
                   </div>
                 </div>
               </div>
@@ -607,7 +622,11 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 justify-center">
                     <Server className="h-5 w-5 text-green-600" />
-                    <span>Python</span>
+                    <span>Vercel for Frontend</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <Server className="h-5 w-5 text-green-600" />
+                    <span>Locally Hosted Backend </span>
                   </div>
                   <div className="flex items-center gap-2 justify-center">
                     <Cpu className="h-5 w-5 text-green-600" />
@@ -618,6 +637,13 @@ export default function Home() {
             </div>
           </div>
         </footer>
+        <div className="border mt-4 p-2 text-center">
+          {" "}
+          <p className=" ">
+            By Team OnCall Engineers, Built for Code For Bharat Season 1, 2025
+          </p>{" "}
+          <p className="mt-4">By Shubham, Harsh, Sahil and Yashi</p>
+        </div>
       </main>
     </div>
   );

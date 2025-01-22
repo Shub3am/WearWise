@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WearWise
+
+WearWise is an innovative AI Health Diagnosing App that combines your Smart Watch's data with reported symptoms to provide comprehensive health insights. Our platform helps you better understand your health patterns and make informed decisions about your well-being.
+
+---
+
+## Features
+- **AI-Driven Insights**: Analyze data from your smartwatch alongside self-reported symptoms.
+- **Comprehensive Reports**: Get detailed health reports tailored to your unique data.
+- **User-Friendly Interface**: Easy-to-use AI Health Report with all vital insights.
+- **Privacy First**: Your data is securely stored and protected.
+
+---
+
+## Technologies Used
+- **Programming Languages**: Python, JavaScript, TypeScript
+- **Frameworks**: LangChain, Next.JS, Flask
+- **Database**: ChromaDB
+- **Methodology**: RAG
+- **Tools**: Groq, Vercel
+- **AI Models**: Llama 3.1, Mixtral 8x7B, ChatGPT 3.5
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Exported Apple Health JSON data compatible with WearWise.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone [repository-link]
+   ```
+2. Install dependencies:
+   ```bash
+   [installation command]
+   ```
+3. Start the application:
+   ```bash
+   [start command]
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Usage
+- Import Data your smartwatch ( Currently Supports Apple Watches ).
+- Log symptoms through the user interface.
+- View your detailed health insights.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Authors
+- Shubham Vishwakarma : https://github.com/Shub3am/
+- Harsh Pant : https://github.com/crockrocks
+- Sahil Mor : https://github.com/sahilmor
+- Yashi Pitti : https://github.com/YashiPi
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Built For
+- **Code For Bharat Season 1, 2025**
+- By Team OnCall Engineers
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Links
+- Frontend: https://github.com/Shub3am/WearWise-Frontend
+- Backend: https://github.com/Shub3am/WearWise-Backend
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

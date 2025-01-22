@@ -13,7 +13,8 @@ def diagnose():
         
         Vital_Metric_Model_ML = get_key_metrics(list(req_body["symptoms"]['symptoms']))
         report = generate_ai_report(Vital_Metric_Model_ML, health_data, list(req_body["symptoms"]['symptoms']))
-        return jsonify(report)
+        print(report)
+        return report
     return "Request Body Missing"
 
 

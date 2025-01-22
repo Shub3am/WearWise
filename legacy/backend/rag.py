@@ -75,7 +75,7 @@ def create_medical_report(health_data, symptoms, metrics_list):
         }
         return json.dumps(fallback_report, indent=2)
 
-def main(metrics_list, health_data_json, selected_symptoms):
+def generate_ai_report(metrics_list, health_data_json, selected_symptoms):
     try:
         health_data = json.loads(health_data_json)
     except json.JSONDecodeError as e:
@@ -98,8 +98,9 @@ if __name__ == "__main__":
     try:
         with open('data.json', 'r') as f:
             health_data = f.read()
-        
-        report = main(metrics, health_data, symptoms)
+        # Will Add JSON FROM FLASH
+        Vital_Metric_Model_ML = get_key_metrics(symptoms)
+        report = generate_ai_report(Vital_Metric_Model_ML, health_data, symptoms)
         print(report)
     except FileNotFoundError:
         print(json.dumps({"error": "data.json file not found"}, indent=2))

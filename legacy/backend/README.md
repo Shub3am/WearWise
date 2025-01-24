@@ -2,6 +2,10 @@
 
 WearWise is an innovative AI Health Diagnosing App that combines your Smart Watch's data with reported symptoms to provide comprehensive health insights. Our platform helps you better understand your health patterns and make informed decisions about your well-being.
 
+### Video Demo
+[![WearWise](http://img.youtube.com/vi/rK7ai32DDhU/0.jpg)](http://www.youtube.com/watch?v=rK7ai32DDhU)
+
+
 ---
 
 ## Features

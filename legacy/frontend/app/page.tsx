@@ -73,7 +73,7 @@ export default function Home() {
 
   const [uploadedWatchMetric, setUploadedWatchMetric] = useState({});
   const [HealthData, setHealthData] = useState([]);
-  const [ShowSampleData, SetShowSampleData] = useState(true);
+  const [ShowSampleData, SetShowSampleData] = useState(false);
 
   let sampleData = {
     data: {

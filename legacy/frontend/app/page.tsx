@@ -764,7 +764,6 @@ export default function Home() {
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                   Submit Questionnaire
                 </Button>
-                <div>Sample Watch Data</div>
                 <div className="relative">
                   {ShowSampleData ? (
                     <div className="flex  bg-white w-4/6 h-4/6 items-center shadow-lg rounded-md fixed p-5 m-auto flex-col top-10  whitespace-pre overflow-y-scroll">

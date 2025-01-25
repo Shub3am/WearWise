@@ -34,15 +34,18 @@ WearWise is an innovative AI Health Diagnosing App that combines your Smart Watc
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone [repository-link]
+   git clone https://github.com/Shub3am/WearWise-Backend
    ```
 2. Install dependencies:
    ```bash
-   [installation command]
+   pip install -r requirements.txt
    ```
 3. Start the application:
    ```bash
-   [start command]
+   python3 [file.py]
+   # app.py [for flask server]
+   # form_data.py [for finding out metrics]
+   # rag.py [for insights]
    ```
 
 ### Usage

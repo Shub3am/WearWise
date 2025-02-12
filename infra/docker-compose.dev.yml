@@ -1,0 +1,26 @@
+name: wearwise-dev
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg18-trixie
+    environment:
+      POSTGRES_USER: wearwise
+      POSTGRES_PASSWORD: wearwise
+      POSTGRES_DB: wearwise
+    ports: ["55432:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wearwise -d wearwise"]
+      interval: 2s
+      retries: 30
+  redis:
+    image: redis:8.8.3-alpine
+    command: ["redis-server", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
+    ports: ["56379:6379"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+volumes:
+  postgres-data:
+  redis-data:

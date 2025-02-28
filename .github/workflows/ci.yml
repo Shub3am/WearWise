@@ -1,0 +1,48 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.6-pg18-trixie
+        env:
+          POSTGRES_USER: wearwise
+          POSTGRES_PASSWORD: wearwise
+          POSTGRES_DB: wearwise
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wearwise -d wearwise"
+          --health-interval 2s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgres://wearwise:wearwise@localhost:5432/wearwise?sslmode=disable
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:up
+      - run: pnpm db:rollback
+      - run: pnpm db:up
+      - run: test -n "$(psql "$DATABASE_URL" -tAc "select extversion from pg_extension where extname = 'vector'")"

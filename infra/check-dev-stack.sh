@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # Why: proves the local stack matches what production needs (pgvector installable,
 # migrations reversible, Redis never evicts BullMQ keys).
-# Must not: create application data or run anything against a non local database.
+# Must not: touch the developer's working database (the round trip runs on a separate
+# wearwise_check database) or run anything against a non local database.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 compose="docker compose -f infra/docker-compose.dev.yml"
-export DATABASE_URL="postgres://wearwise:wearwise@localhost:55432/wearwise?sslmode=disable"
+export DATABASE_URL="postgres://wearwise:wearwise@localhost:55432/wearwise_check?sslmode=disable"
 
 pnpm db:up
 pnpm db:rollback
 pnpm db:up
 
-vector_version=$($compose exec -T postgres psql -U wearwise -d wearwise -tAc \
+vector_version=$($compose exec -T postgres psql -U wearwise -d wearwise_check -tAc \
   "select extversion from pg_extension where extname = 'vector'")
 test -n "$vector_version" || { echo "pgvector missing"; exit 1; }
 

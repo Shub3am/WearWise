@@ -9,6 +9,7 @@ Entry points: `docker compose -f infra/docker-compose.dev.yml up -d --wait`, `in
 Invariants and gotchas:
 - Redis runs with `maxmemory-policy noeviction`; BullMQ loses jobs under any evicting policy.
 - Local ports are 55432 (Postgres) and 56379 (Redis) because 5432, 5433 and 6379 are used by other projects on the dev machine.
+- `check-dev-stack.sh` runs its migration round trip on a separate `wearwise_check` database so it never rolls back dev data.
 - The pgvector image tag pins both pgvector (0.8.6) and Postgres (18). Change them together.
 
 Callers: developers, CI (mirrors the Postgres image as a service container).

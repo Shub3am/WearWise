@@ -12,7 +12,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "db:up": "dbmate --migrations-dir db/migrations --no-dump-schema up",
-    "db:rollback": "dbmate --migrations-dir db/migrations --no-dump-schema rollback"
+    "db:rollback": "dbmate --migrations-dir db/migrations --no-dump-schema rollback",
+    "db:test:up": "dbmate --env TEST_DATABASE_URL --migrations-dir db/migrations --no-dump-schema up"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

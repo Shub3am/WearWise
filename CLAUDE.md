@@ -5,6 +5,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 ## Modules
 
 - `packages/metrics-catalog/`: the health metrics WearWise understands. See its CLAUDE.md.
+- `packages/db/`: Drizzle mirror of the SQL schema plus the Postgres client for TS services. See its CLAUDE.md.
 - `db/`: dbmate SQL migrations, single owner of the schema. See its CLAUDE.md.
 - `infra/`: local dev stack, later Dockerfiles and Coolify deploy. See its CLAUDE.md.
 - `legacy/`: imported Code for Bharat prototype history (Flask backend, Next.js frontend). Read only, never edit, removed at v1.
@@ -17,6 +18,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 
 ## Test
 
+- `pnpm db:test:up` once before `pnpm test` (migrates `wearwise_test`)
 - `pnpm lint && pnpm typecheck && pnpm test`
 - `./infra/check-dev-stack.sh` for the database and Redis setup
 

@@ -191,6 +191,9 @@ catalogs:
     vitest:
       specifier: 5.0.1
       version: 5.0.1
+    zod:
+      specifier: 4.6.5
+      version: 4.6.5
 
 importers:
 
@@ -205,6 +208,19 @@ importers:
       turbo:
         specifier: 'catalog:'
         version: 2.11.3
+
+  packages/contracts:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.1(@types/node@24.13.6)(vite@8.3.0(@types/node@24.13.6))
 
   packages/db:
     dependencies:
@@ -1043,6 +1059,9 @@ packages:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
 
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
 snapshots:
 
   '@biomejs/biome@2.5.14':
@@ -1527,3 +1546,5 @@ snapshots:
       stackback: 0.0.2
 
   xtend@4.0.2: {}
+
+  zod@4.6.5: {}

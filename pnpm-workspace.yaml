@@ -11,6 +11,7 @@ catalog:
   turbo: 2.11.3
   typescript: 7.0.2
   vitest: 5.0.1
+  zod: 4.6.5
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.11.3'
   - '@turbo/darwin-arm64@2.11.3'

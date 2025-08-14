@@ -1,0 +1,28 @@
+{
+  "name": "@wearwise/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=../../.env --watch src/server.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@clerk/backend": "catalog:",
+    "@clerk/fastify": "catalog:",
+    "@wearwise/contracts": "workspace:*",
+    "@wearwise/db": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "fastify": "catalog:",
+    "fastify-type-provider-zod": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "jose": "catalog:",
+    "svix": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

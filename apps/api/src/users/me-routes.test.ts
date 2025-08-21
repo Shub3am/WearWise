@@ -104,3 +104,43 @@ describe("GET /v1/me", () => {
     ]);
   });
 });
+
+const patchMe = async (token: string, body: unknown) =>
+  app.inject({
+    method: "PATCH",
+    url: "/v1/me",
+    headers: { authorization: `Bearer ${token}` },
+    payload: body as object,
+  });
+
+describe("PATCH /v1/me", () => {
+  test("stores the canonical time zone", async () => {
+    const clerkUserId = `user_${randomUUID()}`;
+    const token = await signer.signSessionToken(clerkUserId);
+    const response = await patchMe(token, { timezone: "asia/kolkata" });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().timezone).toMatch(/^Asia\/(Kolkata|Calcutta)$/);
+    const [row] = await database
+      .select()
+      .from(users)
+      .where(eq(users.clerkUserId, clerkUserId));
+    expect(row?.timezone).toBe(response.json().timezone);
+    expect(row?.updatedAt.getTime()).toBeGreaterThan(
+      row?.createdAt.getTime() ?? Number.POSITIVE_INFINITY,
+    );
+  });
+
+  test("rejects a UTC offset", async () => {
+    const token = await signer.signSessionToken(`user_${randomUUID()}`);
+    expect((await patchMe(token, { timezone: "+05:30" })).statusCode).toBe(400);
+  });
+
+  test("rejects an unauthenticated request", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/v1/me",
+      payload: { timezone: "UTC" },
+    });
+    expect(response.statusCode).toBe(401);
+  });
+});

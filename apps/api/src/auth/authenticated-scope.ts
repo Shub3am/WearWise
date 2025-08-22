@@ -4,6 +4,7 @@ import { clerkPlugin, getAuth } from "@clerk/fastify";
 import type { Database } from "@wearwise/db";
 import type { FastifyPluginAsync } from "fastify";
 import type { ApiConfig } from "../config.ts";
+import { consentRoutes } from "../consents/consent-routes.ts";
 import { meRoutes } from "../users/me-routes.ts";
 
 declare module "fastify" {
@@ -31,4 +32,5 @@ export const authenticatedScope: FastifyPluginAsync<{
     request.clerkUserId = auth.userId;
   });
   await scope.register(meRoutes, { database });
+  await scope.register(consentRoutes, { database });
 };

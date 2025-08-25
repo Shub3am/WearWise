@@ -7,6 +7,7 @@ import {
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import { authenticatedScope } from "./auth/authenticated-scope.ts";
+import { clerkWebhookRoutes } from "./clerk-webhook/clerk-webhook-routes.ts";
 import type { ApiConfig } from "./config.ts";
 import { healthRoutes } from "./health/health-routes.ts";
 
@@ -23,6 +24,10 @@ export async function buildApp({
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   await app.register(healthRoutes, { database });
+  await app.register(clerkWebhookRoutes, {
+    database,
+    signingSecret: config.clerkWebhookSigningSecret,
+  });
   await app.register(authenticatedScope, { prefix: "/v1", config, database });
   return app;
 }

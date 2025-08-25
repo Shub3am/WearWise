@@ -45,3 +45,10 @@ export async function updateUserTimezone(
     throw new Error(`users row ${userId} disappeared during update`);
   return updatedUser;
 }
+
+export async function deleteUserByClerkId(
+  database: Database,
+  clerkUserId: string,
+): Promise<void> {
+  await database.delete(users).where(eq(users.clerkUserId, clerkUserId));
+}

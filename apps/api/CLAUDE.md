@@ -13,5 +13,8 @@ Invariants and gotchas:
 - `authorizedParties` is deliberately unset: native app tokens carry no `azp` and Clerk rejects them when it is set.
 - Node runs the TS source directly. Type only imports must be written `import type` or `import { type X }`.
 - Tests run against `wearwise_test` (run `pnpm db:test:up` first) and use unique Clerk ids per test instead of truncating, so files run in parallel safely.
+- `/webhooks/clerk` parses JSON as a raw string inside its own scope and verifies with `@clerk/backend/webhooks`. Do not switch to `@clerk/fastify/webhooks`: it re-stringifies the body and rejects valid non-compact payloads.
+- Webhooks are at least once and unordered. A `user.created` redelivered after `user.deleted` recreates an empty `users` row. Accepted for now: the row has no data and the Clerk user can no longer sign in.
+- Only `user.created` and `user.deleted` are handled. The API stores nothing else from Clerk, so `user.updated` is acknowledged and ignored.
 
 Callers: `apps/mobile` and `apps/web` over HTTP, Clerk webhooks, the container healthcheck.

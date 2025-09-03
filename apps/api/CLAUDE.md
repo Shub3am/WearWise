@@ -4,7 +4,7 @@ Owns: the Fastify product API: authentication of Clerk session tokens, the signe
 
 Must not know about: BullMQ jobs, OpenRouter, raw health sample ingest (Go owns that), or how the mobile app stores anything. It never writes Go owned health tables.
 
-Entry points: `src/server.ts` (process), `src/app.ts` (`buildApp`, used by tests and the server).
+Entry points: `src/server.ts` (process), `src/app.ts` (`buildApp`, used by tests and the server). Environment: `DATABASE_URL`, `HOST`, `PORT`, `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_JWT_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET`.
 
 Invariants and gotchas:
 - `readApiConfig` is the only reader of `process.env`. Clerk options are passed explicitly, not picked up from env.

@@ -17,6 +17,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 - `pnpm install`
 - `docker compose -f infra/docker-compose.dev.yml up -d --wait`
 - `cp .env.example .env` then `pnpm db:up`
+- API: `node --env-file=.env apps/api/src/server.ts` (needs the Clerk variables listed in apps/api/CLAUDE.md)
 
 ## Test
 

@@ -24,6 +24,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 - `pnpm db:test:up` once before `pnpm test` (migrates `wearwise_test`)
 - `pnpm lint && pnpm typecheck && pnpm test`
 - `./infra/check-dev-stack.sh` for the database and Redis setup
+- `./infra/check-prod-stack.sh` builds and runs the production stack
 
 ## Deploy
 

@@ -1,0 +1,67 @@
+# Why: the stack Coolify deploys: migrate once, then serve the API, beside Postgres and Redis.
+# Must not: publish ports; Coolify's proxy routes the api domain to port 3000.
+# Coolify settings: Base Directory "/", Docker Compose Location "/infra/compose.prod.yml", Auto Deploy off.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/wearwise?sslmode=disable
+      CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:?}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:?}
+      CLERK_JWT_KEY: ${CLERK_JWT_KEY:?}
+      CLERK_WEBHOOK_SIGNING_SECRET: ${CLERK_WEBHOOK_SIGNING_SECRET:?}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # The slim Node image has no curl or wget.
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  migrate:
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    environment:
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/wearwise?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Coolify injects restart: unless-stopped otherwise, which would rerun a one shot job forever.
+    restart: "no"
+
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg18-trixie
+    environment:
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      POSTGRES_DB: wearwise
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d wearwise"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:8.8.3-alpine
+    # BullMQ requires noeviction.
+    command: ["redis-server", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-data:
+  redis-data:

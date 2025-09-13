@@ -13,5 +13,6 @@ Invariants and gotchas:
 - `users.clerk_user_id` is the join key to Clerk and is unique.
 - Deleting a `users` row cascades to `consents`. Every later per user table must also declare `ON DELETE CASCADE`.
 - Schema dumps are off (`--no-dump-schema`) because local pg_dump does not match Postgres 18.
+- `db/Dockerfile` bakes the migrations into a dbmate image; it is the `migrate` service in production.
 
 Callers: developers, CI, deploy pipeline (sub-project 1).

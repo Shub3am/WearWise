@@ -1,0 +1,11 @@
+**/node_modules
+**/.env*
+**/*.md
+**/*.test.ts
+**/test-support
+.git
+.github
+.turbo
+.superpowers
+legacy
+infra/docker-compose.dev.yml

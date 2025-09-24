@@ -17,4 +17,11 @@ Invariants and gotchas:
 - Postgres inside a Git compose application gets no Coolify scheduled S3 backups. Decide before launch (sub-project 11): standalone Coolify database, or a pg_dump sidecar.
 - `exclude_from_hc: true` on `migrate` is a Coolify only key that plain `docker compose` rejects. It is not set; if Coolify marks the app unhealthy because `migrate` exited, add it then.
 
-Callers: developers, CI (mirrors the Postgres image as a service container).
+Coolify setup checklist:
+- Source: the GitHub App connected to `Shub3am/WearWise`.
+- Base Directory `/`, Docker Compose Location `/infra/compose.prod.yml`.
+- Auto Deploy off; CI triggers deploys through the API.
+- API access on, with an empty IP allow list.
+- A token with the `deploy` permission only, stored as the `COOLIFY_TOKEN` secret beside `COOLIFY_URL` and `COOLIFY_APP_UUID`.
+
+Callers: developers, CI (mirrors the Postgres image as a service container, runs `check-prod-stack.sh`), Coolify.

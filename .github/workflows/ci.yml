@@ -6,6 +6,20 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.6-pg18-trixie
+        env:
+          POSTGRES_USER: wearwise
+          POSTGRES_PASSWORD: wearwise
+          POSTGRES_DB: wearwise
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wearwise -d wearwise"
+          --health-interval 2s
+          --health-retries 30
+    env:
+      TEST_DATABASE_URL: postgres://wearwise:wearwise@localhost:5432/wearwise_test?sslmode=disable
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -16,6 +30,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm db:test:up
       - run: pnpm test
 
   migrations:
@@ -46,3 +61,36 @@ jobs:
       - run: pnpm db:rollback
       - run: pnpm db:up
       - run: test -n "$(psql "$DATABASE_URL" -tAc "select extversion from pg_extension where extname = 'vector'")"
+
+  prod-stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: ./infra/check-prod-stack.sh
+
+  deploy:
+    needs: [checks, migrations, prod-stack]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/rebuild'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
+    steps:
+      - name: Skip until Coolify secrets exist
+        if: env.COOLIFY_TOKEN == ''
+        run: echo "::notice::COOLIFY_URL, COOLIFY_TOKEN and COOLIFY_APP_UUID are not set; deploy skipped"
+      - name: Trigger Coolify deployment
+        if: env.COOLIFY_TOKEN != ''
+        run: |
+          response=$(curl --silent --show-error --fail-with-body --max-time 30 \
+            --request POST "${COOLIFY_URL%/}/api/v1/deploy" \
+            --header "Authorization: Bearer ${COOLIFY_TOKEN}" \
+            --header "Content-Type: application/json" \
+            --data "{\"uuid\":\"${COOLIFY_APP_UUID}\",\"force\":false}") || { echo "$response"; exit 1; }
+          echo "$response"
+          # Coolify answers 200 even when the token lacks deploy rights; only a deployment_uuid means it queued.
+          echo "$response" | jq -e '.deployments[0].deployment_uuid' > /dev/null

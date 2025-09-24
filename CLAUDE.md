@@ -28,7 +28,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 
 ## Deploy
 
-- Not set up yet. Planned: GitHub Actions calls the Coolify deploy webhook on green `main`.
+- CI deploys on green pushes to `rebuild` by calling Coolify's deploy API; it skips until the COOLIFY_URL, COOLIFY_TOKEN and COOLIFY_APP_UUID secrets exist. Switches to `main` in sub-project 12.
 
 ## Repo wide rules
 

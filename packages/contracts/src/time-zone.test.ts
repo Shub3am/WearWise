@@ -6,12 +6,15 @@ describe("canonicalTimeZone", () => {
     ["UTC", "UTC"],
     ["utc", "UTC"],
     ["America/New_York", "America/New_York"],
-    ["asia/kolkata", "Asia/Calcutta"],
+    ["asia/kolkata", "Asia/Kolkata"],
+    ["Asia/Kolkata", "Asia/Kolkata"],
+    ["Asia/Calcutta", "Asia/Kolkata"],
+    ["Europe/Kyiv", "Europe/Kyiv"],
   ])("accepts %s as %s", (candidate, canonical) => {
     expect(canonicalTimeZone(candidate)).toBe(canonical);
   });
 
-  test.each(["+05:30", "-08:00", "Mars/Base", ""])(
+  test.each(["+05:30", "-08:00", "Mars/Base", "", "SystemV/AST4"])(
     "rejects %j",
     (candidate) => {
       expect(canonicalTimeZone(candidate)).toBeUndefined();

@@ -119,7 +119,7 @@ describe("PATCH /v1/me", () => {
     const token = await signer.signSessionToken(clerkUserId);
     const response = await patchMe(token, { timezone: "asia/kolkata" });
     expect(response.statusCode).toBe(200);
-    expect(response.json().timezone).toMatch(/^Asia\/(Kolkata|Calcutta)$/);
+    expect(response.json().timezone).toBe("Asia/Kolkata");
     const [row] = await database
       .select()
       .from(users)

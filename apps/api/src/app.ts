@@ -23,6 +23,15 @@ export async function buildApp({
   const app = Fastify({ logger });
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+  // Fastify's default 500 body carries the error message, which for a failed query is the SQL and its parameters.
+  app.setErrorHandler((error, request, reply) => {
+    const statusCode = (error as { statusCode?: number }).statusCode;
+    if (statusCode !== undefined && statusCode < 500) {
+      return reply.send(error);
+    }
+    request.log.error({ err: error }, "unhandled error");
+    return reply.code(500).send({ error: "Internal Server Error" });
+  });
   await app.register(healthRoutes, { database });
   await app.register(clerkWebhookRoutes, {
     database,

@@ -9,7 +9,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 - `packages/contracts/`: zod request and response schemas shared by API and clients. See its CLAUDE.md.
 - `apps/api/`: Fastify product API with Clerk auth. See its CLAUDE.md.
 - `db/`: dbmate SQL migrations, single owner of the schema. See its CLAUDE.md.
-- `infra/`: local dev stack, later Dockerfiles and Coolify deploy. See its CLAUDE.md.
+- `infra/`: local dev stack, production compose that Coolify deploys, and their check scripts. See its CLAUDE.md.
 - `legacy/`: imported Code for Bharat prototype history (Flask backend, Next.js frontend). Read only, never edit, removed at v1.
 
 ## Run

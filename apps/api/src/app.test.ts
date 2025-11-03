@@ -2,11 +2,12 @@ import { createDatabase } from "@wearwise/db";
 import { afterAll, expect, test } from "vitest";
 import { buildApp } from "./app.ts";
 import { createSessionTokenSigner } from "./test-support/session-tokens.ts";
-import { createTestConfig } from "./test-support/test-config.ts";
+import {
+  createTestConfig,
+  unreachableDatabaseUrl,
+} from "./test-support/test-config.ts";
 
-const unreachableDatabase = createDatabase(
-  "postgres://wearwise:wearwise@127.0.0.1:1/wearwise?sslmode=disable",
-);
+const unreachableDatabase = createDatabase(unreachableDatabaseUrl);
 afterAll(async () => {
   await unreachableDatabase.$client.end();
 });

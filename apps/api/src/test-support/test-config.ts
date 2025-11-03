@@ -19,3 +19,7 @@ export function createTestConfig(
     ...overrides,
   };
 }
+
+// Port 1 refuses connections at once, so failure tests do not wait on a timeout.
+export const unreachableDatabaseUrl =
+  "postgres://wearwise:wearwise@127.0.0.1:1/wearwise?sslmode=disable";

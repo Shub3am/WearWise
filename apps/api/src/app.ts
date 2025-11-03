@@ -1,7 +1,7 @@
 // Why: assembles the Fastify instance from its route plugins so tests and the server build the same app.
 // Must not: read the environment, open connections or listen on a port.
 import type { Database } from "@wearwise/db";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -24,9 +24,8 @@ export async function buildApp({
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
   // Fastify's default 500 body carries the error message, which for a failed query is the SQL and its parameters.
-  app.setErrorHandler((error, request, reply) => {
-    const statusCode = (error as { statusCode?: number }).statusCode;
-    if (statusCode !== undefined && statusCode < 500) {
+  app.setErrorHandler<FastifyError>((error, request, reply) => {
+    if ((error.statusCode ?? 500) < 500) {
       return reply.send(error);
     }
     request.log.error({ err: error }, "unhandled error");

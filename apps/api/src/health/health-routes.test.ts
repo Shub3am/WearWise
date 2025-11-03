@@ -1,14 +1,15 @@
 import { createDatabase } from "@wearwise/db";
 import { afterAll, describe, expect, test } from "vitest";
 import { buildApp } from "../app.ts";
-import { createTestConfig } from "../test-support/test-config.ts";
+import {
+  createTestConfig,
+  unreachableDatabaseUrl,
+} from "../test-support/test-config.ts";
 
 describe("GET /healthz", () => {
   const config = createTestConfig();
   const database = createDatabase(config.databaseUrl);
-  const unreachableDatabase = createDatabase(
-    "postgres://wearwise:wearwise@127.0.0.1:1/wearwise?sslmode=disable",
-  );
+  const unreachableDatabase = createDatabase(unreachableDatabaseUrl);
   afterAll(async () => {
     await database.$client.end();
     await unreachableDatabase.$client.end();

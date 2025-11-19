@@ -8,13 +8,14 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 - `packages/db/`: Drizzle mirror of the SQL schema plus the Postgres client for TS services. See its CLAUDE.md.
 - `packages/contracts/`: zod request and response schemas shared by API and clients. See its CLAUDE.md.
 - `apps/api/`: Fastify product API with Clerk auth. See its CLAUDE.md.
+- `apps/ingest/`: Go service that verifies Clerk session tokens and stores health sample batches. See its CLAUDE.md.
 - `db/`: dbmate SQL migrations, single owner of the schema. See its CLAUDE.md.
 - `infra/`: local dev stack, production compose that Coolify deploys, and their check scripts. See its CLAUDE.md.
 - `legacy/`: imported Code for Bharat prototype history (Flask backend, Next.js frontend). Read only, never edit, removed at v1.
 
 ## Run
 
-- `pnpm install`
+- `pnpm install` (also needs Go 1.27.1 for apps/ingest)
 - `docker compose -f infra/docker-compose.dev.yml up -d --wait`
 - `cp .env.example .env` then `pnpm db:up`
 - API: `node --env-file=.env apps/api/src/server.ts` (needs the Clerk variables listed in apps/api/CLAUDE.md)

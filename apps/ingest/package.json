@@ -1,0 +1,10 @@
+{
+  "name": "@wearwise/ingest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "go vet ./...",
+    "test": "go test -count=1 ./..."
+  }
+}

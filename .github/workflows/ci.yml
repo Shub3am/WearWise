@@ -27,6 +27,10 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: apps/ingest/go.mod
+          cache-dependency-path: apps/ingest/go.sum
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck

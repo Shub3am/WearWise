@@ -270,7 +270,11 @@ importers:
         specifier: 'catalog:'
         version: 5.0.1(@types/node@24.13.6)(vite@8.3.0(@types/node@24.13.6))
 
-  apps/ingest: {}
+  apps/ingest:
+    devDependencies:
+      '@wearwise/metrics-catalog':
+        specifier: workspace:*
+        version: link:../../packages/metrics-catalog
 
   packages/contracts:
     dependencies:

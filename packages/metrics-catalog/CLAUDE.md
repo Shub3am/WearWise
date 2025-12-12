@@ -11,5 +11,6 @@ Invariants and gotchas:
 - Units are canonical. Platform units (the prototype export used kJ) are converted at sync time, not here.
 - Heart rate variability differs by platform: Apple reports SDNN, Health Connect reports RMSSD. Same id, compare only against the same user's own baseline.
 - Consumed as TypeScript source (no build). Import with the `.ts` extension inside the package.
+- After changing a metric id or unit, run `pnpm --filter @wearwise/ingest generate` and commit `units.gen.go`; CI fails on drift.
 
-Callers: apps/api, apps/worker, apps/mobile, and the Go ingest code generator (sub-project 2).
+Callers: apps/api, apps/worker, apps/mobile, and apps/ingest, whose `go generate` step copies each metric's canonical unit into Go.

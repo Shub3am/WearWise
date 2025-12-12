@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "generate": "go generate ./...",
     "typecheck": "go vet ./...",
     "test": "go test -count=1 ./..."
+  },
+  "devDependencies": {
+    "@wearwise/metrics-catalog": "workspace:*"
   }
 }

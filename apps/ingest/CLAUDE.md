@@ -8,5 +8,6 @@ Entry points: `internal/config` (settings). Environment: `DATABASE_URL`, `PORT` 
 
 Invariants and gotchas:
 - `internal/config` is the only reader of the environment; it takes `os.Getenv` as an argument so tests pass a map.
+- `internal/metriccatalog/units.gen.go` is generated from `@wearwise/metrics-catalog` by `pnpm --filter @wearwise/ingest generate` and committed. CI regenerates it and fails on any diff.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

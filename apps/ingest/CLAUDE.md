@@ -9,5 +9,6 @@ Entry points: `internal/config` (settings). Environment: `DATABASE_URL`, `PORT` 
 Invariants and gotchas:
 - `internal/config` is the only reader of the environment; it takes `os.Getenv` as an argument so tests pass a map.
 - `internal/metriccatalog/units.gen.go` is generated from `@wearwise/metrics-catalog` by `pnpm --filter @wearwise/ingest generate` and committed. CI regenerates it and fails on any diff.
+- `CLERK_JWT_KEY` must be a PKIX `PUBLIC KEY` PEM with real newlines. Verification is offline; there is no JWKS fetch. clerk-sdk-go accepts tokens without `exp` and tokens of pending sessions, so `sessiontoken` rejects both itself. `azp` is not checked, because native app tokens carry none.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

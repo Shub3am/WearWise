@@ -14,5 +14,8 @@ Invariants and gotchas:
 - Deleting a `users` row cascades to `consents`. Every later per user table must also declare `ON DELETE CASCADE`.
 - Schema dumps are off (`--no-dump-schema`) because local pg_dump does not match Postgres 18.
 - `db/Dockerfile` bakes the migrations into a dbmate image; it is the `migrate` service in production.
+- `health_samples` is range partitioned by UTC month on `start_at`. Partitions are created at runtime by `ensure_health_samples_partition` and dropped by `drop_health_samples_partitions_before`; no migration creates monthly partitions. Its primary key includes `start_at` because a partitioned table's unique keys must contain the partition key.
+- Only apps/ingest writes `health_samples` and `sleep_sessions`.
+- `health_samples` partitions before 2002 belong to the ingest retention test; never create them anywhere else.
 
-Callers: developers, CI, deploy pipeline (sub-project 1).
+Callers: developers, CI, deploy pipeline (sub-project 1), apps/ingest (sqlc reads this schema to generate its store).

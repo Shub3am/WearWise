@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "generate": "go generate ./...",
+    "sqlc": "docker run --rm --user \"$(id -u):$(id -g)\" --volume \"$(git rev-parse --show-toplevel)\":/src --workdir /src/apps/ingest sqlc/sqlc:1.31.1 generate",
     "typecheck": "go vet ./...",
     "test": "go test -count=1 ./..."
   },

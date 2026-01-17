@@ -12,5 +12,7 @@ Invariants and gotchas:
 - `CLERK_JWT_KEY` must be a PKIX `PUBLIC KEY` PEM with real newlines. Verification is offline; there is no JWKS fetch. clerk-sdk-go accepts tokens without `exp` and tokens of pending sessions, so `sessiontoken` rejects both itself. `azp` is not checked, because native app tokens carry none.
 - `internal/store` holds sqlc output generated from `queries/` and `db/migrations`. Change those and run `pnpm --filter @wearwise/ingest sqlc` (Docker); never edit the generated `.go` files. The `_test.go` files there are hand written and test the SQL functions. CI regenerates and fails on any diff.
 - Tests run against the migrated `wearwise_test` (`pnpm db:test:up`, `TEST_DATABASE_URL`) and create their own users through `internal/testdatabase`, never truncating.
+- Samples whose `startAt` is older than the 90 day retention window or more than 24 hours ahead are skipped and counted, not rejected, so a 90 day backfill that straddles the edge still succeeds. Sleep sessions are never skipped.
+- `samplebatch` returns every time as UTC truncated to microseconds, the precision Postgres stores. Compare and deduplicate only those values.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

@@ -4,7 +4,7 @@ Owns: the Go ingest service: verifying Clerk session tokens, validating health s
 
 Must not know about: BullMQ, OpenRouter, the Fastify API's routes, or how the mobile app reads HealthKit or Health Connect. It never writes `users` or `consents`.
 
-Entry points: `internal/config` (settings). Environment: `DATABASE_URL`, `PORT` (default 8080), `CLERK_JWT_KEY`.
+Entry points: `internal/config` (settings), `internal/ingesthttp` (`NewHandler`, `GET /healthz`, `POST /v1/samples`). Environment: `DATABASE_URL`, `PORT` (default 8080), `CLERK_JWT_KEY`.
 
 Invariants and gotchas:
 - `internal/config` is the only reader of the environment; it takes `os.Getenv` as an argument so tests pass a map.
@@ -16,5 +16,8 @@ Invariants and gotchas:
 - `samplebatch` returns every time as UTC truncated to microseconds, the precision Postgres stores. Compare and deduplicate only those values.
 - `batchwriter` creates partitions before its transaction and writes both tables in one transaction. Duplicates inside a batch are collapsed in Go (last wins) after microsecond truncation, because one upsert statement cannot touch a row twice. A resend matches `IS DISTINCT FROM` on nothing and rewrites no row.
 - A sample whose start time changes on the device keeps its external uuid but lands as a second row, since `start_at` is part of the key. Deletions on the device are not propagated. Both are open until the mobile sync (sub-project 3) defines deletes.
+- `POST /v1/samples` checks the token, then the `health_data_processing` consent, then reads the body. A signed in user with no `users` row gets 403, so the mobile app must call the API's `/v1/me` (which creates the row) and record consent before its first sync.
+- The 8 MiB body cap applies to both the raw and the gzip decoded body.
+- A 500 never carries error details; they go to the log.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

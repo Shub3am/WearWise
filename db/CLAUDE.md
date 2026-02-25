@@ -17,5 +17,6 @@ Invariants and gotchas:
 - `health_samples` is range partitioned by UTC month on `start_at`. Partitions are created at runtime by `ensure_health_samples_partition` and dropped by `drop_health_samples_partitions_before`; no migration creates monthly partitions. Its primary key includes `start_at` because a partitioned table's unique keys must contain the partition key.
 - Only apps/ingest writes `health_samples` and `sleep_sessions`.
 - `health_samples` partitions before 2002 belong to the ingest retention test; never create them anywhere else.
+- DDL that locks both `users` and `health_samples` must lock `users` first, the order a cascading user delete takes them; the reverse order deadlocks against account deletion.
 
 Callers: developers, CI, deploy pipeline (sub-project 1), apps/ingest (sqlc reads this schema to generate its store).

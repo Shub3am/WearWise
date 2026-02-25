@@ -22,6 +22,9 @@ BEGIN
     RETURN;
   END IF;
   PERFORM pg_advisory_xact_lock(hashtext('health_samples_partitions'));
+  -- Creating the partition locks users for its foreign key after locking health_samples; a cascading
+  -- user delete locks them in the opposite order. Locking users first makes the order match.
+  LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE;
   EXECUTE format(
     'CREATE TABLE IF NOT EXISTS %I PARTITION OF health_samples FOR VALUES FROM (%L) TO (%L)',
     partition_name, month_start, month_start + interval '1 month');

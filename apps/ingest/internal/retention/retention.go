@@ -1,4 +1,4 @@
-// Why: owns how long raw health samples are kept.
+// Why: owns how long raw health samples are kept, enforced by a daily partition drop.
 // Must not: know about HTTP or batch validation.
 package retention
 

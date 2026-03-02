@@ -19,5 +19,6 @@ Invariants and gotchas:
 - `POST /v1/samples` checks the token, then the `health_data_processing` consent, then reads the body. A signed in user with no `users` row gets 403, so the mobile app must call the API's `/v1/me` (which creates the row) and record consent before its first sync.
 - The 8 MiB body cap applies to both the raw and the gzip decoded body.
 - A 500 never carries error details; they go to the log.
+- A partition is dropped only when its whole month ends before now minus 90 days, and the loop runs daily, so raw samples live 90 to about 121 days. A batch writing into a month the loop is dropping at that moment can fail with a 500 and is retried by the app.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

@@ -19,6 +19,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 - `docker compose -f infra/docker-compose.dev.yml up -d --wait`
 - `cp .env.example .env` then `pnpm db:up`
 - API: `node --env-file=.env apps/api/src/server.ts` (needs the Clerk variables listed in apps/api/CLAUDE.md)
+- Ingest: `go -C apps/ingest run ./cmd/ingest` with `DATABASE_URL` and `CLERK_JWT_KEY` exported (see apps/ingest/CLAUDE.md)
 
 ## Test
 

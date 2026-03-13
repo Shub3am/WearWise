@@ -4,7 +4,7 @@ Owns: the Go ingest service: verifying Clerk session tokens, validating health s
 
 Must not know about: BullMQ, OpenRouter, the Fastify API's routes, or how the mobile app reads HealthKit or Health Connect. It never writes `users` or `consents`.
 
-Entry points: `internal/config` (settings), `internal/ingesthttp` (`NewHandler`, `GET /healthz`, `POST /v1/samples`). Environment: `DATABASE_URL`, `PORT` (default 8080), `CLERK_JWT_KEY`.
+Entry points: `cmd/ingest` (process; `ingest healthcheck` probes a running server for the container healthcheck), `internal/ingesthttp` (`GET /healthz`, `POST /v1/samples`), `internal/config` (settings). Environment: `DATABASE_URL`, `PORT` (default 8080), `CLERK_JWT_KEY` (the same PEM the API uses).
 
 Invariants and gotchas:
 - `internal/config` is the only reader of the environment; it takes `os.Getenv` as an argument so tests pass a map.

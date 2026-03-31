@@ -23,5 +23,6 @@ Coolify setup checklist:
 - Auto Deploy off; CI triggers deploys through the API.
 - API access on, with an empty IP allow list.
 - A token with the `deploy` permission only, stored as the `COOLIFY_TOKEN` secret beside `COOLIFY_URL` and `COOLIFY_APP_UUID`.
+- Assign the `ingest` service its own domain (port 8080). It reads the same `CLERK_JWT_KEY` variable as `api`.
 
 Callers: developers, CI (mirrors the Postgres image as a service container, runs `check-prod-stack.sh`), Coolify.

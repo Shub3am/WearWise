@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Why: proves the production compose file builds, migrates and serves a healthy API before Coolify ever runs it.
+# Why: proves the production compose file builds, migrates and serves a healthy API and ingest service before Coolify ever runs it.
 # Must not: touch the dev stack or leave anything behind; it uses its own project name and deletes its volumes.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -19,6 +19,9 @@ compose=(docker compose --project-name wearwise-prod-check --project-directory .
 trap '"${compose[@]}" down --volumes --remove-orphans >/dev/null 2>&1' EXIT
 
 "${compose[@]}" up --detach --build --wait
-users_table="$("${compose[@]}" exec -T postgres psql -U wearwise -d wearwise -tAc "select to_regclass('public.users')")"
-[ "$users_table" = "users" ] || { echo "users table missing after migrate" >&2; exit 1; }
-echo "prod stack ok: migrations applied, api healthy"
+database_tables="$("${compose[@]}" exec -T postgres psql -U wearwise -d wearwise -tAc "select to_regclass('public.users'), to_regclass('public.health_samples')")"
+[ "$database_tables" = "users|health_samples" ] || { echo "tables missing after migrate: $database_tables" >&2; exit 1; }
+# up --wait only waits for services that exist, so a missing ingest service would pass silently.
+ingest_health="$("${compose[@]}" ps --format '{{.Health}}' ingest)"
+[ "$ingest_health" = "healthy" ] || { echo "ingest not healthy: ${ingest_health:-no such service}" >&2; exit 1; }
+echo "prod stack ok: migrations applied, api and ingest healthy"

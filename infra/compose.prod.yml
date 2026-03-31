@@ -1,5 +1,5 @@
-# Why: the stack Coolify deploys: migrate once, then serve the API, beside Postgres and Redis.
-# Must not: publish ports; Coolify's proxy routes the api domain to port 3000.
+# Why: the stack Coolify deploys: migrate once, then serve the API and ingest, beside Postgres and Redis.
+# Must not: publish ports; Coolify's proxy routes the api domain to port 3000 and the ingest domain to port 8080.
 # Coolify settings: Base Directory "/", Docker Compose Location "/infra/compose.prod.yml", Auto Deploy off.
 services:
   api:
@@ -19,6 +19,24 @@ services:
     healthcheck:
       # The slim Node image has no curl or wget.
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/healthz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  ingest:
+    build:
+      context: .
+      dockerfile: apps/ingest/Dockerfile
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://${SERVICE_USER_POSTGRES}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/wearwise?sslmode=disable
+      CLERK_JWT_KEY: ${CLERK_JWT_KEY:?}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/ingest", "healthcheck"]
       interval: 10s
       timeout: 5s
       retries: 3

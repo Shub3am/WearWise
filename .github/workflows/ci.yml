@@ -32,6 +32,12 @@ jobs:
           go-version-file: apps/ingest/go.mod
           cache-dependency-path: apps/ingest/go.sum
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @wearwise/ingest generate
+      - run: pnpm --filter @wearwise/ingest sqlc
+      - name: Generated ingest code matches its sources
+        run: test -z "$(git status --porcelain apps/ingest)" || { git status --porcelain apps/ingest; git diff apps/ingest; exit 1; }
+      - name: Ingest Go code is gofmt clean
+        run: test -z "$(gofmt -l apps/ingest)" || { gofmt -l apps/ingest; exit 1; }
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm db:test:up

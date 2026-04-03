@@ -20,5 +20,6 @@ Invariants and gotchas:
 - The 8 MiB body cap applies to both the raw and the gzip decoded body.
 - A 500 never carries error details; they go to the log.
 - A partition is dropped only when its whole month ends before now minus 90 days, and the loop runs daily, so raw samples live 90 to about 121 days. A batch writing into a month the loop is dropping at that moment can fail with a 500 and is retried by the app.
+- `BenchmarkPostSamples` is the throughput baseline: `go -C apps/ingest test -run '^$' -bench . -benchtime=20x ./internal/ingesthttp`. It needs the migrated `wearwise_test` and runs in process, so it excludes network time. Rerun it and compare before claiming ingest got faster.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

@@ -91,13 +91,17 @@ func gzipped(t testing.TB, body []byte) []byte {
 	return compressed.Bytes()
 }
 
+func heartRateSample(startAt time.Time, beatsPerMinute int) map[string]any {
+	formattedStartAt := startAt.UTC().Format(time.RFC3339Nano)
+	return map[string]any{
+		"metric": "heart_rate", "externalUuid": uuid.NewString(), "startAt": formattedStartAt, "endAt": formattedStartAt,
+		"value": beatsPerMinute, "unit": "bpm", "source": "com.apple.health",
+	}
+}
+
 func heartRateBatch(t *testing.T, startAt time.Time) []byte {
 	t.Helper()
-	formattedStartAt := startAt.UTC().Format(time.RFC3339Nano)
-	body, err := json.Marshal(map[string]any{"samples": []any{map[string]any{
-		"metric": "heart_rate", "externalUuid": uuid.NewString(), "startAt": formattedStartAt, "endAt": formattedStartAt,
-		"value": 64, "unit": "bpm", "source": "com.apple.health",
-	}}})
+	body, err := json.Marshal(map[string]any{"samples": []any{heartRateSample(startAt, 64)}})
 	if err != nil {
 		t.Fatal(err)
 	}

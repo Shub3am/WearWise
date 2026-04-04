@@ -8,7 +8,6 @@ import (
 
 	"github.com/Shub3am/WearWise/apps/ingest/internal/samplebatch"
 	"github.com/Shub3am/WearWise/apps/ingest/internal/testdatabase"
-	"github.com/google/uuid"
 )
 
 func fullGzipBatches(b *testing.B, batchCount int) [][]byte {
@@ -18,11 +17,7 @@ func fullGzipBatches(b *testing.B, batchCount int) [][]byte {
 	for batchIndex := range batches {
 		samples := make([]map[string]any, samplebatch.MaxItems)
 		for sampleIndex := range samples {
-			startAt := firstStartAt.Add(time.Duration(sampleIndex) * time.Second).Format(time.RFC3339Nano)
-			samples[sampleIndex] = map[string]any{
-				"metric": "heart_rate", "externalUuid": uuid.NewString(), "startAt": startAt, "endAt": startAt,
-				"value": 55 + sampleIndex%50, "unit": "bpm", "source": "com.apple.health",
-			}
+			samples[sampleIndex] = heartRateSample(firstStartAt.Add(time.Duration(sampleIndex)*time.Second), 55+sampleIndex%50)
 		}
 		body, err := json.Marshal(map[string]any{"samples": samples})
 		if err != nil {

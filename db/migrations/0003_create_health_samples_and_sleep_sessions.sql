@@ -22,6 +22,9 @@ BEGIN
     RETURN;
   END IF;
   PERFORM pg_advisory_xact_lock(hashtext('health_samples_partitions'));
+  -- Without a timeout the DDL below queues behind any long reader of health_samples (pg_dump), and
+  -- every later ingest and users write queues behind the DDL. Failing fast lets the phone retry.
+  PERFORM set_config('lock_timeout', '2s', true);
   -- Creating the partition locks users for its foreign key after locking health_samples; a cascading
   -- user delete locks them in the opposite order. Locking users first makes the order match.
   LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE;
@@ -38,6 +41,7 @@ DECLARE
   dropped_count integer := 0;
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtext('health_samples_partitions'));
+  PERFORM set_config('lock_timeout', '2s', true);
   FOR partition_name IN
     SELECT child.relname FROM pg_inherits
     JOIN pg_class child ON child.oid = pg_inherits.inhrelid

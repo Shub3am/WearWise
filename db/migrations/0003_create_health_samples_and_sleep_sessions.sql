@@ -22,6 +22,15 @@ BEGIN
     RETURN;
   END IF;
   PERFORM pg_advisory_xact_lock(hashtext('health_samples_partitions'));
+  -- The session that held the advisory lock may have just created this partition. to_regclass would
+  -- miss it: taking an advisory lock does not refresh the catalog cache, but a new query snapshot does.
+  IF EXISTS (
+    SELECT FROM pg_inherits
+    JOIN pg_class child ON child.oid = pg_inherits.inhrelid
+    WHERE pg_inherits.inhparent = 'health_samples'::regclass AND child.relname = partition_name
+  ) THEN
+    RETURN;
+  END IF;
   -- Without a timeout the DDL below queues behind any long reader of health_samples (pg_dump), and
   -- every later ingest and users write queues behind the DDL. Failing fast lets the phone retry.
   PERFORM set_config('lock_timeout', '2s', true);

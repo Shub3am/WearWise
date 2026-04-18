@@ -7,7 +7,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     services:
-      postgres:
+      postgres: &postgres-service
         image: pgvector/pgvector:0.8.6-pg18-trixie
         env:
           POSTGRES_USER: wearwise
@@ -46,17 +46,7 @@ jobs:
   migrations:
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: pgvector/pgvector:0.8.6-pg18-trixie
-        env:
-          POSTGRES_USER: wearwise
-          POSTGRES_PASSWORD: wearwise
-          POSTGRES_DB: wearwise
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U wearwise -d wearwise"
-          --health-interval 2s
-          --health-retries 30
+      postgres: *postgres-service
     env:
       DATABASE_URL: postgres://wearwise:wearwise@localhost:5432/wearwise?sslmode=disable
     steps:

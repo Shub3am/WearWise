@@ -30,12 +30,12 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 
 ## Deploy
 
-- CI deploys on green pushes to `rebuild` by calling Coolify's deploy API; it skips until the COOLIFY_URL, COOLIFY_TOKEN and COOLIFY_APP_UUID secrets exist. Switches to `main` in sub-project 12.
+- CI deploys on green pushes to `main` by calling Coolify's deploy API; it skips until the COOLIFY_URL, COOLIFY_TOKEN and COOLIFY_APP_UUID secrets exist.
 
 ## Repo wide rules
 
 - Commits here use the identity `shub3am <shubhamvishwakarma0604@gmail.com>`, set in local git config.
-- New work goes on branch `rebuild`, one logical change per commit, no co-author trailers.
+- New work goes on branch `main`, one logical change per commit, no co-author trailers.
 - The schema changes only through `db/migrations`. Never run drizzle-kit migrations.
 - Local ports: Postgres 55432, Redis 56379.
 - Internal TS packages are consumed as source (`.ts` imports, `noEmit`); no build step for them.

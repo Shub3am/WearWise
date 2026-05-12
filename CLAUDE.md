@@ -9,6 +9,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 - `packages/contracts/`: zod request and response schemas shared by API and clients. See its CLAUDE.md.
 - `apps/api/`: Fastify product API with Clerk auth. See its CLAUDE.md.
 - `apps/ingest/`: Go service that verifies Clerk session tokens and stores health sample batches. See its CLAUDE.md.
+- `apps/mobile/`: Expo app that signs in, records consent and syncs HealthKit and Health Connect data to ingest. See its CLAUDE.md.
 - `db/`: dbmate SQL migrations, single owner of the schema. See its CLAUDE.md.
 - `infra/`: local dev stack, production compose that Coolify deploys, and their check scripts. See its CLAUDE.md.
 - `legacy/`: imported Code for Bharat prototype history (Flask backend, Next.js frontend). Read only, never edit, removed at v1.
@@ -20,6 +21,7 @@ Consumer wellness coach: syncs Apple Health and Health Connect data, scores slee
 - `cp .env.example .env` then `pnpm db:up`
 - API: `node --env-file=.env apps/api/src/server.ts` (needs the Clerk variables listed in apps/api/CLAUDE.md)
 - Ingest: `go -C apps/ingest run ./cmd/ingest` with `DATABASE_URL` and `CLERK_JWT_KEY` exported (see apps/ingest/CLAUDE.md)
+- Mobile: `cp apps/mobile/.env.example apps/mobile/.env`, then `pnpm --filter @wearwise/mobile android`
 
 ## Test
 

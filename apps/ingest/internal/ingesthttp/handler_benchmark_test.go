@@ -33,11 +33,11 @@ func fullGzipBatches(b *testing.B, batchCount int) [][]byte {
 	return batches
 }
 
-func postEachBatch(b *testing.B, server testServer, headers map[string]string, batches [][]byte) {
+func postEachBatch(b *testing.B, server testServer, headers map[string]string, batchAt func(batchIndex int) []byte) {
 	b.Helper()
 	b.ResetTimer()
 	for batchIndex := range b.N {
-		if recorder := server.postSamples(b, headers, batches[batchIndex]); recorder.Code != http.StatusNoContent {
+		if recorder := server.postSamples(b, headers, batchAt(batchIndex)); recorder.Code != http.StatusNoContent {
 			b.Fatalf("got %d %s, want 204", recorder.Code, recorder.Body.String())
 		}
 	}
@@ -51,17 +51,14 @@ func BenchmarkPostSamples(b *testing.B) {
 	headers := server.bearer(b, clerkUserID)
 	headers["Content-Encoding"] = "gzip"
 	b.Run("new_samples", func(b *testing.B) {
-		postEachBatch(b, server, headers, fullGzipBatches(b, b.N))
+		batches := fullGzipBatches(b, b.N)
+		postEachBatch(b, server, headers, func(batchIndex int) []byte { return batches[batchIndex] })
 	})
 	b.Run("resent_batch", func(b *testing.B) {
 		batch := fullGzipBatches(b, 1)[0]
 		if recorder := server.postSamples(b, headers, batch); recorder.Code != http.StatusNoContent {
 			b.Fatalf("first write got %d %s", recorder.Code, recorder.Body.String())
 		}
-		resends := make([][]byte, b.N)
-		for resendIndex := range resends {
-			resends[resendIndex] = batch
-		}
-		postEachBatch(b, server, headers, resends)
+		postEachBatch(b, server, headers, func(int) []byte { return batch })
 	})
 }

@@ -8,6 +8,7 @@ import type {
 import type {
   SampleBatch,
   SleepStageName,
+  WireSample,
 } from "../sync-batches/wire-types.ts";
 
 export const syncedRecordTypes = [
@@ -53,64 +54,50 @@ export function recordToSampleBatch(record: SyncedRecord): SampleBatch {
   if (recordId === undefined || source === undefined)
     return { samples: [], sleepSessions: [] };
   const identity = { externalUuid: recordId, source };
+  const oneSample = (
+    metric: WireSample["metric"],
+    startAt: string,
+    endAt: string,
+    value: number,
+    unit: WireSample["unit"],
+  ): SampleBatch => ({
+    samples: [{ ...identity, metric, startAt, endAt, value, unit }],
+    sleepSessions: [],
+  });
 
   switch (record.recordType) {
     case "Steps":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "step_count",
-            startAt: record.startTime,
-            endAt: record.endTime,
-            value: record.count,
-            unit: "count",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "step_count",
+        record.startTime,
+        record.endTime,
+        record.count,
+        "count",
+      );
     case "Distance":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "walking_running_distance",
-            startAt: record.startTime,
-            endAt: record.endTime,
-            value: record.distance.inKilometers,
-            unit: "km",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "walking_running_distance",
+        record.startTime,
+        record.endTime,
+        record.distance.inKilometers,
+        "km",
+      );
     case "FloorsClimbed":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "flights_climbed",
-            startAt: record.startTime,
-            endAt: record.endTime,
-            value: record.floors,
-            unit: "count",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "flights_climbed",
+        record.startTime,
+        record.endTime,
+        record.floors,
+        "count",
+      );
     case "ActiveCaloriesBurned":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "active_energy",
-            startAt: record.startTime,
-            endAt: record.endTime,
-            value: record.energy.inKilocalories,
-            unit: "kcal",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "active_energy",
+        record.startTime,
+        record.endTime,
+        record.energy.inKilocalories,
+        "kcal",
+      );
     case "HeartRate":
       return {
         samples: record.samples.map((point) => ({
@@ -125,61 +112,37 @@ export function recordToSampleBatch(record: SyncedRecord): SampleBatch {
         sleepSessions: [],
       };
     case "RestingHeartRate":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "resting_heart_rate",
-            startAt: record.time,
-            endAt: record.time,
-            value: record.beatsPerMinute,
-            unit: "bpm",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "resting_heart_rate",
+        record.time,
+        record.time,
+        record.beatsPerMinute,
+        "bpm",
+      );
     case "HeartRateVariabilityRmssd":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "heart_rate_variability",
-            startAt: record.time,
-            endAt: record.time,
-            value: record.heartRateVariabilityMillis,
-            unit: "ms",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "heart_rate_variability",
+        record.time,
+        record.time,
+        record.heartRateVariabilityMillis,
+        "ms",
+      );
     case "RespiratoryRate":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "respiratory_rate",
-            startAt: record.time,
-            endAt: record.time,
-            value: record.rate,
-            unit: "breaths/min",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "respiratory_rate",
+        record.time,
+        record.time,
+        record.rate,
+        "breaths/min",
+      );
     case "OxygenSaturation":
-      return {
-        samples: [
-          {
-            ...identity,
-            metric: "blood_oxygen_saturation",
-            startAt: record.time,
-            endAt: record.time,
-            value: record.percentage,
-            unit: "%",
-          },
-        ],
-        sleepSessions: [],
-      };
+      return oneSample(
+        "blood_oxygen_saturation",
+        record.time,
+        record.time,
+        record.percentage,
+        "%",
+      );
     case "SleepSession":
       return {
         samples: [],

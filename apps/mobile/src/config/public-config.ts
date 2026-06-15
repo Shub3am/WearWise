@@ -8,11 +8,7 @@ export type PublicConfig = {
   ingestUrl: string;
 };
 
-type PublicEnv = {
-  clerkPublishableKey: string | undefined;
-  apiUrl: string | undefined;
-  ingestUrl: string | undefined;
-};
+type PublicEnv = { [Setting in keyof PublicConfig]: string | undefined };
 
 export function publicConfigFrom(env: PublicEnv): PublicConfig | undefined {
   const { clerkPublishableKey, apiUrl, ingestUrl } = env;

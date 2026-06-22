@@ -42,23 +42,18 @@ function recordedPages(
 }
 
 function recordedPosts(outcomes: IngestOutcome[], events: string[]) {
-  const postedBatches: SampleBatch[] = [];
-  const postBatch = async (
-    body: Uint8Array<ArrayBuffer>,
-  ): Promise<IngestOutcome> => {
+  return async (body: Uint8Array<ArrayBuffer>): Promise<IngestOutcome> => {
     const batch: SampleBatch = JSON.parse(
       new TextDecoder().decode(ungzip(body)),
     );
-    postedBatches.push(batch);
     events.push(`post ${batch.samples.length}`);
     return outcomes.shift() ?? "stored";
   };
-  return { postBatch, postedBatches };
 }
 
 test("posts each page's batches, then saves that page's cursor", async () => {
   const events: string[] = [];
-  const { postBatch } = recordedPosts([], events);
+  const postBatch = recordedPosts([], events);
 
   const result = await runSync(
     recordedPages([batchOf(2), batchOf(1)], events),
@@ -80,7 +75,7 @@ test.each<IngestOutcome>(["signed_out", "consent_required", "rejected"])(
   "stops on %s in the middle of a page without saving its cursor or reading on",
   async (outcome) => {
     const events: string[] = [];
-    const { postBatch } = recordedPosts(["stored", outcome], events);
+    const postBatch = recordedPosts(["stored", outcome], events);
 
     const result = await runSync(
       recordedPages([batchOf(5001), batchOf(1)], events),
@@ -94,7 +89,7 @@ test.each<IngestOutcome>(["signed_out", "consent_required", "rejected"])(
 
 test("saves the cursor of a page whose records were all dropped, without posting", async () => {
   const events: string[] = [];
-  const { postBatch } = recordedPosts([], events);
+  const postBatch = recordedPosts([], events);
   const unacceptablePage = {
     samples: [stepSample(0, Number.NaN)],
     sleepSessions: [],

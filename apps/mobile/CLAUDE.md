@@ -18,5 +18,6 @@ Invariants and gotchas:
 - Cursors live only on the device (`expo-sqlite/kv-store`). Reinstalling the app or clearing its data starts a fresh 90 day backfill.
 - One sync runs at a time (`singleFlight`); a call during a run gets that run's result.
 - HealthKit anchors are stored per type under `healthkit-anchor:<metric id>`. Deleted HealthKit samples are not sent (ingest has no delete endpoint yet); they only move the anchor.
+- HealthKit background delivery needs both halves: `requestHealthKitAccess` calls `configureBackgroundTypes`, which the library persists and re-registers natively at every launch, and `startHealthKitDelivery` must run at every launch to receive the queued wakes. HealthKit never says whether read access was granted; a denied type just returns nothing.
 
 Callers: none (it is the client). It calls `apps/api` and `apps/ingest` over HTTP.

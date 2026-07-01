@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/Shub3am/WearWise/apps/ingest/internal/store"
 	"github.com/Shub3am/WearWise/apps/ingest/internal/testdatabase"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -175,4 +177,50 @@ func TestEnsurePartitionDoesNotDeadlockWithUserDeletion(t *testing.T) {
 	requireNoDeadlockWithUserDeletion(t, pool, userID, func(conn *pgxpool.Conn) error {
 		return store.New(conn).EnsureHealthSamplesPartition(context.Background(), time.Date(2051, 7, 1, 0, 0, 0, 0, time.UTC))
 	})
+}
+
+// Holds the lock a long read such as pg_dump holds on health_samples until the test ends.
+func holdReadLockOnHealthSamples(t *testing.T, pool *pgxpool.Pool) {
+	t.Helper()
+	longRead, err := pool.Begin(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { longRead.Rollback(context.Background()) })
+	if _, err := longRead.Exec(t.Context(), "LOCK TABLE health_samples IN ACCESS SHARE MODE"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+const lockNotAvailableCode = "55P03"
+
+func requireLockNotAvailable(t *testing.T, err error) {
+	t.Helper()
+	var postgresError *pgconn.PgError
+	if !errors.As(err, &postgresError) || postgresError.Code != lockNotAvailableCode {
+		t.Fatalf("got %v, want SQLSTATE %s (lock_timeout)", err, lockNotAvailableCode)
+	}
+}
+
+func TestEnsurePartitionGivesUpWhileALongReadHoldsHealthSamples(t *testing.T) {
+	pool := testdatabase.Open(t)
+	dropPartitionAtCleanup(t, pool, "health_samples_2061_02")
+	holdReadLockOnHealthSamples(t, pool)
+	ensureContext, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	err := store.New(pool).EnsureHealthSamplesPartition(ensureContext, time.Date(2061, 2, 1, 0, 0, 0, 0, time.UTC))
+	requireLockNotAvailable(t, err)
+}
+
+func TestDropPartitionsGivesUpWhileALongReadHoldsHealthSamples(t *testing.T) {
+	pool := testdatabase.Open(t)
+	dropPartitionAtCleanup(t, pool, "health_samples_2001_06")
+	if err := store.New(pool).EnsureHealthSamplesPartition(t.Context(), time.Date(2001, 6, 1, 0, 0, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+	holdReadLockOnHealthSamples(t, pool)
+	dropContext, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	_, err := store.New(pool).DropHealthSamplesPartitionsBefore(dropContext, time.Date(2001, 7, 1, 0, 0, 0, 0, time.UTC))
+	requireLockNotAvailable(t, err)
 }

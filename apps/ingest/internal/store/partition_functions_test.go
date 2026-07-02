@@ -126,17 +126,18 @@ func TestDropPartitionsBeforeDropsOnlyWholeMonthsBeforeTheCutoff(t *testing.T) {
 	}
 }
 
-func waitUntilBackendWaitsOnRelationLock(t *testing.T, pool *pgxpool.Pool, backendPID uint32) {
+// lockKind is a pg_stat_activity wait_event of type Lock, such as "relation" or "advisory".
+func waitUntilBackendWaitsOnLock(t *testing.T, pool *pgxpool.Pool, backendPID uint32, lockKind string) {
 	t.Helper()
 	for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); time.Sleep(10 * time.Millisecond) {
 		var waitEvent *string
 		err := pool.QueryRow(t.Context(),
 			"SELECT wait_event FROM pg_stat_activity WHERE pid = $1 AND wait_event_type = 'Lock'", backendPID).Scan(&waitEvent)
-		if err == nil && waitEvent != nil && *waitEvent == "relation" {
+		if err == nil && waitEvent != nil && *waitEvent == lockKind {
 			return
 		}
 	}
-	t.Fatal("partition DDL never waited on a relation lock")
+	t.Fatalf("backend %d never waited on a %s lock", backendPID, lockKind)
 }
 
 // Runs partitionDDL while a user delete is between locking users and cascading into health_samples.
@@ -158,7 +159,7 @@ func requireNoDeadlockWithUserDeletion(t *testing.T, pool *pgxpool.Pool, userID 
 	defer ddlConn.Release()
 	ddlResult := make(chan error, 1)
 	go func() { ddlResult <- partitionDDL(ddlConn) }()
-	waitUntilBackendWaitsOnRelationLock(t, pool, ddlConn.Conn().PgConn().PID())
+	waitUntilBackendWaitsOnLock(t, pool, ddlConn.Conn().PgConn().PID(), "relation")
 	_, deletionErr := userDeletion.Exec(t.Context(), "DELETE FROM users WHERE id = $1", userID)
 	if deletionErr == nil {
 		deletionErr = userDeletion.Commit(t.Context())
@@ -223,4 +224,56 @@ func TestDropPartitionsGivesUpWhileALongReadHoldsHealthSamples(t *testing.T) {
 	defer cancel()
 	_, err := store.New(pool).DropHealthSamplesPartitionsBefore(dropContext, time.Date(2001, 7, 1, 0, 0, 0, 0, time.UTC))
 	requireLockNotAvailable(t, err)
+}
+
+func TestEnsurePartitionSkipsUsersLockWhenAnotherSessionCreatedThePartitionFirst(t *testing.T) {
+	pool := testdatabase.Open(t)
+	dropPartitionAtCleanup(t, pool, "health_samples_2071_04")
+	monthStart := time.Date(2071, 4, 1, 0, 0, 0, 0, time.UTC)
+	firstCreator, err := pool.Begin(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer firstCreator.Rollback(context.Background())
+	if err := store.New(firstCreator).EnsureHealthSamplesPartition(t.Context(), monthStart); err != nil {
+		t.Fatal(err)
+	}
+	userWriterConn, err := pool.Acquire(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer userWriterConn.Release()
+	userWriter, err := userWriterConn.Begin(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer userWriter.Rollback(context.Background())
+	userWriterLocked := make(chan error, 1)
+	go func() {
+		_, lockErr := userWriter.Exec(t.Context(), "LOCK TABLE users IN ROW EXCLUSIVE MODE")
+		userWriterLocked <- lockErr
+	}()
+	waitUntilBackendWaitsOnLock(t, pool, userWriterConn.Conn().PgConn().PID(), "relation")
+	secondCreatorConn, err := pool.Acquire(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer secondCreatorConn.Release()
+	secondCreatorContext, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	defer cancel()
+	secondCreatorResult := make(chan error, 1)
+	go func() {
+		secondCreatorResult <- store.New(secondCreatorConn).EnsureHealthSamplesPartition(secondCreatorContext, monthStart)
+	}()
+	waitUntilBackendWaitsOnLock(t, pool, secondCreatorConn.Conn().PgConn().PID(), "advisory")
+	// Commit releases the users lock before the advisory lock, so the user writer holds users before the second creator wakes.
+	if err := firstCreator.Commit(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-userWriterLocked; err != nil {
+		t.Fatal(err)
+	}
+	if err := <-secondCreatorResult; err != nil {
+		t.Fatalf("second creator got %v, want nil without waiting on users", err)
+	}
 }

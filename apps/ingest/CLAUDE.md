@@ -7,7 +7,7 @@ Must not know about: BullMQ, OpenRouter, the Fastify API's routes, or how the mo
 Entry points: `cmd/ingest` (process; `ingest healthcheck` probes a running server for the container healthcheck), `internal/ingesthttp` (`GET /healthz`, `POST /v1/samples`), `internal/config` (settings). Environment: `DATABASE_URL`, `PORT` (default 8080), `CLERK_JWT_KEY` (the same PEM the API uses).
 
 Invariants and gotchas:
-- `internal/config` is the only reader of the environment; it takes `os.Getenv` as an argument so tests pass a map.
+- Production settings come only through `internal/config`, which takes `os.Getenv` from `cmd/ingest` as an argument so tests pass a map. The one other environment read is `TEST_DATABASE_URL` in `internal/testdatabase`, used only by tests.
 - `internal/metriccatalog/units.gen.go` is generated from `@wearwise/metrics-catalog` by `pnpm --filter @wearwise/ingest generate` and committed. CI regenerates it and fails on any diff.
 - `CLERK_JWT_KEY` must be a PKIX `PUBLIC KEY` PEM with real newlines. Verification is offline; there is no JWKS fetch. clerk-sdk-go accepts tokens without `exp` and tokens of pending sessions, so `sessiontoken` rejects both itself. `azp` is not checked, because native app tokens carry none.
 - `internal/store` holds sqlc output generated from `queries/` and `db/migrations`. Change those and run `pnpm --filter @wearwise/ingest sqlc` (Docker); never edit the generated `.go` files. The `_test.go` files there are hand written and test the SQL functions. CI regenerates and fails on any diff.

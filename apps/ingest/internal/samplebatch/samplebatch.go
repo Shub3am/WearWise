@@ -175,6 +175,12 @@ func sleepSessionProblem(session wireSleepSession) string {
 	}
 	sessionStartAt := storedTime(session.StartAt)
 	sessionEndAt := storedTime(session.EndAt)
+	if !isJSONEncodableYear(sessionStartAt) {
+		return "startAt: must fall in years 0 to 9999 in UTC"
+	}
+	if !isJSONEncodableYear(sessionEndAt) {
+		return "endAt: must fall in years 0 to 9999 in UTC"
+	}
 	if !sessionEndAt.After(sessionStartAt) {
 		return "endAt: must be after startAt"
 	}
@@ -192,6 +198,12 @@ func sleepSessionProblem(session wireSleepSession) string {
 		}
 	}
 	return ""
+}
+
+// batchwriter stores stages as JSON, and encoding/json refuses times outside years 0 to 9999. An offset lets a wire
+// time inside that range land outside it in UTC. Stages lie within their session, so bounding the session bounds them.
+func isJSONEncodableYear(storedAt time.Time) bool {
+	return storedAt.Year() >= 0 && storedAt.Year() <= 9999
 }
 
 // Postgres text columns reject NUL, so it is refused here as a client error instead of failing the insert.

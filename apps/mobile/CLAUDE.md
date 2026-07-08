@@ -19,5 +19,6 @@ Invariants and gotchas:
 - One sync runs at a time (`singleFlight`); a call during a run gets that run's result.
 - HealthKit anchors are stored per type under `healthkit-anchor:<metric id>`. Deleted HealthKit samples are not sent (ingest has no delete endpoint yet); they only move the anchor.
 - HealthKit background delivery needs both halves: `requestHealthKitAccess` calls `configureBackgroundTypes`, which the library persists and re-registers natively at every launch, and `startHealthKitDelivery` must run at every launch to receive the queued wakes. HealthKit never says whether read access was granted; a denied type just returns nothing.
+- Health Connect has one cursor for every type: the changes token, stored as JSON `{ changesToken, recordTypes }` under `health-connect-changes-token`. A token lasts 30 days. An expired token, or a granted type set that differs from the saved one, starts a fresh 90 day backfill. The backfill saves the token only on its last page, so a backfill cut off halfway starts over; ingest is idempotent on record ids, so nothing is stored twice.
 
 Callers: none (it is the client). It calls `apps/api` and `apps/ingest` over HTTP.

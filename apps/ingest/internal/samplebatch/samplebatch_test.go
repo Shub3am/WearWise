@@ -163,8 +163,12 @@ func TestDecodeRejectsInvalidSleepSession(t *testing.T) {
 		{"NUL in source", map[string]any{"source": "watch\x00"}, `sleepSessions[0].source: must not contain NUL`},
 		{"missing start", map[string]any{"startAt": nil}, `sleepSessions[0].startAt: is required`},
 		{"end equals start", map[string]any{"endAt": "2026-09-22T17:00:00Z"}, `sleepSessions[0].endAt: must be after startAt`},
-		{"start before year 0 in UTC", map[string]any{"startAt": "0000-01-01T00:30:00+01:00"}, `sleepSessions[0].startAt: must fall in years 0 to 9999 in UTC`},
-		{"end after year 9999 in UTC", map[string]any{"endAt": "9999-12-31T23:30:00-01:00"}, `sleepSessions[0].endAt: must fall in years 0 to 9999 in UTC`},
+		{"stage starts before year 0 in UTC", map[string]any{"startAt": "0000-01-01T00:30:00+01:00", "stages": []any{
+			map[string]any{"stage": "light", "startAt": "0000-01-01T00:30:00+01:00", "endAt": "2026-09-22T18:00:00Z"},
+		}}, `sleepSessions[0].stages[0].startAt: must fall in years 0 to 9999 in UTC`},
+		{"stage ends after year 9999 in UTC", map[string]any{"endAt": "9999-12-31T23:30:00-01:00", "stages": []any{
+			map[string]any{"stage": "light", "startAt": "2026-09-22T17:00:00Z", "endAt": "9999-12-31T23:30:00-01:00"},
+		}}, `sleepSessions[0].stages[0].endAt: must fall in years 0 to 9999 in UTC`},
 		{"unknown stage", map[string]any{"stages": []any{
 			map[string]any{"stage": "nap", "startAt": "2026-09-22T17:00:00Z", "endAt": "2026-09-22T18:00:00Z"},
 		}}, `sleepSessions[0].stages[0].stage: must be one of awake, asleep, light, deep, rem, in_bed, got "nap"`},
@@ -182,6 +186,13 @@ func TestDecodeRejectsInvalidSleepSession(t *testing.T) {
 				t.Fatalf("got %v, want %s", err, testCase.wantError)
 			}
 		})
+	}
+}
+
+func TestDecodeAcceptsSessionWithoutStagesPastYear9999InUTC(t *testing.T) {
+	session := withFields(validSleepSession(), map[string]any{"endAt": "9999-12-31T23:30:00-01:00", "stages": nil})
+	if _, err := samplebatch.Decode(batchBody(t, nil, []map[string]any{session}), decodeNow); err != nil {
+		t.Fatal(err)
 	}
 }
 

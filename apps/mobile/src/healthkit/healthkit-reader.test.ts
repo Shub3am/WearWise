@@ -4,7 +4,7 @@ import {
   queryQuantitySamplesWithAnchor,
 } from "@kingstinct/react-native-healthkit";
 import { createInMemoryKeyValueStore } from "../storage/in-memory-key-value-store.ts";
-import type { SyncPage } from "../sync/run-sync.ts";
+import { readAllPages } from "../sync/read-all-pages.ts";
 import type { HealthKitCategorySample } from "./healthkit-metrics.ts";
 import { readHealthKitPages } from "./healthkit-reader.ts";
 
@@ -43,17 +43,6 @@ function firstPageOnly(identifier: string, firstPage: object) {
     queried === identifier && options.anchor === undefined
       ? firstPage
       : noChanges) as never;
-}
-
-async function readAllPages(
-  pages: AsyncGenerator<SyncPage>,
-): Promise<SyncPage[]> {
-  const readPages: SyncPage[] = [];
-  for await (const page of pages) {
-    readPages.push(page);
-    await page.saveCursor();
-  }
-  return readPages;
 }
 
 beforeEach(() => {

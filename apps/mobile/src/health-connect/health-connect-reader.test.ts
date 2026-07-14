@@ -5,6 +5,7 @@ import {
   readRecords,
 } from "react-native-health-connect";
 import { createInMemoryKeyValueStore } from "../storage/in-memory-key-value-store.ts";
+import { readAllPages } from "../sync/read-all-pages.ts";
 import type { SyncPage } from "../sync/run-sync.ts";
 import { readHealthConnectPages } from "./health-connect-reader.ts";
 
@@ -21,6 +22,10 @@ const changesQuery = jest.mocked(getChanges);
 const recordsQuery = jest.mocked(readRecords);
 
 const tokenKey = "health-connect-changes-token";
+const backfillTimeRange = {
+  operator: "after",
+  startTime: "2026-06-26T12:00:00.000Z",
+};
 const dataOrigin = "com.google.android.apps.fitness";
 const noChanges = {
   upsertionChanges: [],
@@ -59,17 +64,6 @@ function readGrants(...recordTypes: string[]) {
 
 function savedToken(changesToken: string, recordTypes: string[]): string {
   return JSON.stringify({ changesToken, recordTypes });
-}
-
-async function readAllPages(
-  pages: AsyncGenerator<SyncPage>,
-): Promise<SyncPage[]> {
-  const readPages: SyncPage[] = [];
-  for await (const page of pages) {
-    readPages.push(page);
-    await page.saveCursor();
-  }
-  return readPages;
 }
 
 function pageIds(pages: SyncPage[]) {
@@ -120,14 +114,13 @@ test("backfills every granted read type from 90 days ago, then saves the token m
   expect(changesQuery).toHaveBeenCalledWith({
     recordTypes: ["Steps", "SleepSession"],
   });
-  const timeRangeFilter = {
-    operator: "after",
-    startTime: "2026-06-26T12:00:00.000Z",
-  };
   expect(recordsQuery.mock.calls).toEqual([
-    ["Steps", { timeRangeFilter, pageToken: undefined }],
-    ["Steps", { timeRangeFilter, pageToken: "p2" }],
-    ["SleepSession", { timeRangeFilter, pageToken: undefined }],
+    ["Steps", { timeRangeFilter: backfillTimeRange, pageToken: undefined }],
+    ["Steps", { timeRangeFilter: backfillTimeRange, pageToken: "p2" }],
+    [
+      "SleepSession",
+      { timeRangeFilter: backfillTimeRange, pageToken: undefined },
+    ],
   ]);
   await expect(store.getItemAsync(tokenKey)).resolves.toBe(
     savedToken("t1", ["Steps", "SleepSession"]),
@@ -229,10 +222,7 @@ test("an expired changes token starts a fresh 90 day backfill with a new token",
     [[], []],
   ]);
   expect(recordsQuery).toHaveBeenCalledWith("Steps", {
-    timeRangeFilter: {
-      operator: "after",
-      startTime: "2026-06-26T12:00:00.000Z",
-    },
+    timeRangeFilter: backfillTimeRange,
     pageToken: undefined,
   });
   await expect(store.getItemAsync(tokenKey)).resolves.toBe(

@@ -12,13 +12,17 @@ export type WireSample = {
   source: string;
 };
 
-export type SleepStageName =
-  | "awake"
-  | "asleep"
-  | "light"
-  | "deep"
-  | "rem"
-  | "in_bed";
+// Same list and order as the Go ingest's sleepStageNames (apps/ingest/internal/samplebatch/samplebatch.go).
+export const sleepStageNames = [
+  "awake",
+  "asleep",
+  "light",
+  "deep",
+  "rem",
+  "in_bed",
+] as const;
+
+export type SleepStageName = (typeof sleepStageNames)[number];
 
 export type WireSleepStage = {
   stage: SleepStageName;

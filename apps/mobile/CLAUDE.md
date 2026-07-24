@@ -11,5 +11,6 @@ Invariants and gotchas:
 - `keepWhatIngestAccepts` mirrors the Go ingest's validation (`apps/ingest/internal/samplebatch`). Ingest rejects the whole batch for one bad record, so a rule added there must be added here in the same change, or sync stalls on that page.
 - `splitIntoBatches` mirrors the Go ingest's per-request caps (`MaxItems` 5000 in `apps/ingest/internal/samplebatch`, and the 8 MiB decoded body limit in `apps/ingest/internal/ingesthttp`). If ingest changes a cap, `maxItemsPerBatch` or `maxBatchJsonBytes` must change in the same change, or ingest rejects the batch.
 - Tests are colocated `*.test.ts(x)` files, never inside `src/app`, because expo-router treats every file there as a route. `@testing-library/react-native` stays on 13; 14 breaks `renderRouter`.
+- HealthKit reads always pass a unit, because without one HealthKit answers in the user's preferred unit (miles, degF). HealthKit's percent is a 0 to 1 fraction and is scaled to 0 to 100. HealthKit's heart rate variability is SDNN while Health Connect's is RMSSD; both land in `heart_rate_variability`, so the metrics engine must not compare values across platforms.
 
 Callers: none (it is the client). It calls `apps/api` and `apps/ingest` over HTTP.

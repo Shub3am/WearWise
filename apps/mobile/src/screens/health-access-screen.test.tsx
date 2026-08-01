@@ -42,7 +42,7 @@ test("asks Health Connect on Android, remembers it asked, then goes home", async
   jest.replaceProperty(Platform, "OS", "android");
   jest.mocked(requestHealthConnectAccess).mockResolvedValue(true);
   render(<HealthAccessScreen />);
-  fireEvent.press(screen.getByText("Continue"));
+  fireEvent.press(screen.getByRole("button", { name: /continue/i }));
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   expect(await appKeyValueStore.getItemAsync(healthAccessRequestedKey)).toBe(
     "yes",
@@ -54,7 +54,7 @@ test("asks HealthKit on iOS, then goes home", async () => {
   jest.replaceProperty(Platform, "OS", "ios");
   jest.mocked(requestHealthKitAccess).mockResolvedValue(true);
   render(<HealthAccessScreen />);
-  fireEvent.press(screen.getByText("Continue"));
+  fireEvent.press(screen.getByRole("button", { name: /continue/i }));
   await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   expect(requestHealthConnectAccess).not.toHaveBeenCalled();
 });
@@ -63,7 +63,7 @@ test("stays and explains when Health Connect is not available", async () => {
   jest.replaceProperty(Platform, "OS", "android");
   jest.mocked(requestHealthConnectAccess).mockResolvedValue(false);
   render(<HealthAccessScreen />);
-  fireEvent.press(screen.getByText("Continue"));
+  fireEvent.press(screen.getByRole("button", { name: /continue/i }));
   expect(
     await screen.findByText(
       "Health Connect is not available on this phone. Install or update it from Google Play, then try again.",

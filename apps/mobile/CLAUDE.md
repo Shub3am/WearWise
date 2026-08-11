@@ -25,5 +25,6 @@ Invariants and gotchas:
 - Signed in and signed out screens are split only by the two `Stack.Protected` guards in `src/screens/root-navigator.tsx`. No screen navigates to or away from sign in. `useAuth` is always called with `treatPendingAsSignedOut: false`, as Clerk requires with its native `AuthView`.
 - Onboarding order lives only in `nextOnboardingStep`: both consents at `consentNoticeVersion`, then one health access request, then home. Screens finish with `router.replace("/")` and home asks again. Changing any word of `consent-notice.ts` needs a new `consentNoticeVersion`, which sends every user back through consent. The health access flag (`health-access-requested`) is per install, because HealthKit never says whether access was granted.
 - The device time zone is compared after `canonicalTimeZone` from `@wearwise/contracts`, the same function the API applies, so a legacy device name never rewrites the saved zone.
+- Foreground sync starts only on the home screen: on mount and on its button it runs `fetchMe`, the onboarding check, the time zone update, then `syncHealthData`, in that order, because ingest answers 403 until the consent row exists.
 
 Callers: none (it is the client). It calls `apps/api` and `apps/ingest` over HTTP.

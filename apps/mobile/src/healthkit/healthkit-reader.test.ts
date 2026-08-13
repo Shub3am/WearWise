@@ -23,7 +23,7 @@ const watch = {
 };
 const noChanges = { samples: [], deletedSamples: [], newAnchor: "unchanged" };
 
-function sleepSample(
+function categorySample(
   uuid: string,
   value: number,
   startAt: string,
@@ -36,6 +36,13 @@ function sleepSample(
     value,
     sourceRevision: watch,
   };
+}
+
+function firstPageOnly(identifier: string, firstPage: object) {
+  return (async (queried: string, options: { anchor?: string }) =>
+    queried === identifier && options.anchor === undefined
+      ? firstPage
+      : noChanges) as never;
 }
 
 async function readAllPages(
@@ -125,17 +132,13 @@ test("reads from 90 days ago", async () => {
 
 test("a page with only deletions sends nothing but moves the anchor", async () => {
   const store = createInMemoryKeyValueStore();
-  quantityQuery.mockImplementation((async (
-    identifier: string,
-    options: { anchor?: string },
-  ) => {
-    if (
-      identifier !== "HKQuantityTypeIdentifierHeartRate" ||
-      options.anchor !== undefined
-    )
-      return noChanges;
-    return { samples: [], deletedSamples: [{ uuid: "gone" }], newAnchor: "d1" };
-  }) as never);
+  quantityQuery.mockImplementation(
+    firstPageOnly("HKQuantityTypeIdentifierHeartRate", {
+      samples: [],
+      deletedSamples: [{ uuid: "gone" }],
+      newAnchor: "d1",
+    }),
+  );
 
   const pages = await readAllPages(readHealthKitPages(store));
 
@@ -148,35 +151,31 @@ test("a page with only deletions sends nothing but moves the anchor", async () =
 });
 
 test("rebuilds whole nights around changed sleep samples", async () => {
-  const s1 = sleepSample(
+  const s1 = categorySample(
     "s1",
     3,
     "2026-09-19T22:00:00.000Z",
     "2026-09-20T01:30:00.000Z",
   );
-  const s2 = sleepSample(
+  const s2 = categorySample(
     "s2",
     4,
     "2026-09-20T01:30:00.000Z",
     "2026-09-20T03:00:00.000Z",
   );
-  const s3 = sleepSample(
+  const s3 = categorySample(
     "s3",
     5,
     "2026-09-20T03:00:00.000Z",
     "2026-09-20T06:15:00.000Z",
   );
-  categoryAnchoredQuery.mockImplementation((async (
-    identifier: string,
-    options: { anchor?: string },
-  ) => {
-    if (
-      identifier !== "HKCategoryTypeIdentifierSleepAnalysis" ||
-      options.anchor !== undefined
-    )
-      return noChanges;
-    return { samples: [s2, s3], deletedSamples: [], newAnchor: "z1" };
-  }) as never);
+  categoryAnchoredQuery.mockImplementation(
+    firstPageOnly("HKCategoryTypeIdentifierSleepAnalysis", {
+      samples: [s2, s3],
+      deletedSamples: [],
+      newAnchor: "z1",
+    }),
+  );
   categoryQuery.mockResolvedValue([s1, s2, s3] as never);
 
   const pages = await readAllPages(
@@ -202,24 +201,16 @@ test("rebuilds whole nights around changed sleep samples", async () => {
 });
 
 test("sends stood hours from the stand hour category", async () => {
-  categoryAnchoredQuery.mockImplementation((async (
-    identifier: string,
-    options: { anchor?: string },
-  ) => {
-    if (
-      identifier !== "HKCategoryTypeIdentifierAppleStandHour" ||
-      options.anchor !== undefined
-    )
-      return noChanges;
-    return {
+  categoryAnchoredQuery.mockImplementation(
+    firstPageOnly("HKCategoryTypeIdentifierAppleStandHour", {
       samples: [
-        sleepSample(
+        categorySample(
           "stood",
           0,
           "2026-09-20T09:00:00.000Z",
           "2026-09-20T10:00:00.000Z",
         ),
-        sleepSample(
+        categorySample(
           "idle",
           1,
           "2026-09-20T10:00:00.000Z",
@@ -228,8 +219,8 @@ test("sends stood hours from the stand hour category", async () => {
       ],
       deletedSamples: [],
       newAnchor: "h1",
-    };
-  }) as never);
+    }),
+  );
 
   const pages = await readAllPages(
     readHealthKitPages(createInMemoryKeyValueStore()),

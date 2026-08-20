@@ -8,6 +8,7 @@ import {
   queryQuantitySamplesWithAnchor,
 } from "@kingstinct/react-native-healthkit";
 import type { KeyValueStore } from "../storage/key-value-store.ts";
+import { backfillStartDate } from "../sync/backfill-window.ts";
 import type { SyncPage } from "../sync/run-sync.ts";
 import type { SampleBatch } from "../sync-batches/wire-types.ts";
 import {
@@ -19,7 +20,6 @@ import {
 import { groupSleepSessions } from "./healthkit-sleep.ts";
 
 const pageLimit = 2000;
-const backfillDays = 90;
 const dayMillis = 24 * 60 * 60 * 1000;
 
 type AnchoredResponse<Sample> = {
@@ -29,9 +29,7 @@ type AnchoredResponse<Sample> = {
 };
 
 function backfillFilter() {
-  return {
-    date: { startDate: new Date(Date.now() - backfillDays * dayMillis) },
-  };
+  return { date: { startDate: backfillStartDate() } };
 }
 
 // HealthKit has no has-more flag, so paging ends at the first page with neither samples nor deletions.

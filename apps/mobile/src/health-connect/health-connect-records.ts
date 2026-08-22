@@ -38,7 +38,8 @@ export function isSyncedRecord(
   return syncedRecordTypeNames.has(record.recordType);
 }
 
-// Health Connect's SleepStageType. 0 is UNKNOWN and has no wire stage; 3 is OUT_OF_BED, which counts as awake.
+// Health Connect's SleepStageType. 0 is UNKNOWN and has no wire stage; 3 is OUT_OF_BED and 7 is AWAKE_IN_BED,
+// both counted as awake.
 const stageByHealthConnectStage = new Map<number, SleepStageName>([
   [1, "awake"],
   [2, "asleep"],
@@ -46,6 +47,7 @@ const stageByHealthConnectStage = new Map<number, SleepStageName>([
   [4, "light"],
   [5, "deep"],
   [6, "rem"],
+  [7, "awake"],
 ]);
 
 export function recordToSampleBatch(record: SyncedRecord): SampleBatch {

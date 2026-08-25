@@ -85,3 +85,11 @@ test("fails without syncing when the app has no configuration", async () => {
 
   expect(syncHealthData).not.toHaveBeenCalled();
 });
+
+test("reports a sync that throws as failed", async () => {
+  jest
+    .mocked(syncHealthData)
+    .mockRejectedValue(new Error("network request failed"));
+
+  await expect(syncFromBackground()).resolves.toBe(2);
+});

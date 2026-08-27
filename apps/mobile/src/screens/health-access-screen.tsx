@@ -2,7 +2,7 @@
 // Must not: sync; home syncs after this screen sends the user back there.
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Button, Platform, Text, View } from "react-native";
 import { requestHealthConnectAccess } from "../health-connect/health-connect-access.ts";
 import { requestHealthKitAccess } from "../healthkit/healthkit-access.ts";
 import { healthAccessRequestedKey } from "../onboarding/onboarding-step.ts";
@@ -41,12 +41,7 @@ export function HealthAccessScreen() {
             : "Apple Health is not available on this device."}
         </Text>
       )}
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => void requestHealthAccess()}
-      >
-        <Text>Continue</Text>
-      </Pressable>
+      <Button title="Continue" onPress={() => void requestHealthAccess()} />
     </View>
   );
 }

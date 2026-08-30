@@ -11,14 +11,21 @@ import { appKeyValueStore } from "../storage/key-value-store.ts";
 export function HealthAccessScreen() {
   const router = useRouter();
   const [healthStoreMissing, setHealthStoreMissing] = useState(false);
+  const [requestFailed, setRequestFailed] = useState(false);
   const healthStoreName =
     Platform.OS === "android" ? "Health Connect" : "Apple Health";
 
   async function requestHealthAccess() {
-    const accessRequested =
-      Platform.OS === "android"
-        ? await requestHealthConnectAccess()
-        : await requestHealthKitAccess();
+    let accessRequested: boolean;
+    try {
+      accessRequested =
+        Platform.OS === "android"
+          ? await requestHealthConnectAccess()
+          : await requestHealthKitAccess();
+    } catch {
+      setRequestFailed(true);
+      return;
+    }
     if (!accessRequested) {
       setHealthStoreMissing(true);
       return;
@@ -39,6 +46,11 @@ export function HealthAccessScreen() {
           {Platform.OS === "android"
             ? "Health Connect is not available on this phone. Install or update it from Google Play, then try again."
             : "Apple Health is not available on this device."}
+        </Text>
+      )}
+      {requestFailed && (
+        <Text>
+          {`WearWise could not open the ${healthStoreName} permission screen. Try again.`}
         </Text>
       )}
       <Button title="Continue" onPress={() => void requestHealthAccess()} />

@@ -28,4 +28,10 @@ Invariants and gotchas:
 - Foreground sync starts only on the home screen: on mount and on its button it runs `fetchMe`, the onboarding check, the time zone update, then `syncHealthData`, in that order, because ingest answers 403 until the consent row exists.
 - `@clerk/expo`'s `useAuth` returns a new `getToken` closure on every render, so anything passed as a hook dependency must go through `useServerAccess`'s stable `ServerAccess`, never `getToken` directly.
 
+Android toolchain, confirmed by running natively on an emulator:
+- The JDK that works here is `openjdk@17` from Homebrew, not the `zulu@17` cask. `JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home` (`java -version` reports 17.0.20.1). `/usr/libexec/java_home -v 17` does not find it, because the Homebrew formula is not registered in `/Library/Java/JavaVirtualMachines`; use `brew --prefix openjdk@17` instead. The `zulu@17` cask needs an interactive sudo prompt to install, which fails in a non-interactive shell.
+- Hermes truncates ISO 8601 timestamps that have more than millisecond precision instead of rejecting them: `Date.parse("2026-09-20T08:00:00.123456789Z")` returns `1789891200123`, a valid epoch ms number, not `NaN`.
+- `Intl.DateTimeFormat("en", { timeZone: "Asia/Calcutta" }).resolvedOptions().timeZone` returns `"Asia/Calcutta"` on device; ICU timezone data is present and resolves the identifier as given.
+- To repeat the Hermes check: connect to Metro's inspector at `ws://127.0.0.1:8081/inspector/debug?device=<id>&page=1` (get the id from `curl http://localhost:8081/json/list`) with header `Origin: http://127.0.0.1:8081`, not `http://localhost:8081`. `@react-native/dev-middleware` accepts either as a loopback origin, but `@expo/cli`'s own stricter check compares the Origin header against a URL it builds internally, which resolves `localhost` to `127.0.0.1` on this machine; the literal string `localhost` fails that comparison and the socket is silently terminated right after the handshake, seen as WS close code 1006 with an empty reason.
+
 Callers: none (it is the client). It calls `apps/api` and `apps/ingest` over HTTP.

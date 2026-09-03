@@ -223,8 +223,13 @@ test("maps a sleep session with its stages and drops unknown stages", () => {
       },
       {
         startTime: "2026-09-20T01:10:00Z",
-        endTime: "2026-09-20T06:00:00Z",
+        endTime: "2026-09-20T02:00:00Z",
         stage: 2,
+      },
+      {
+        startTime: "2026-09-20T02:00:00Z",
+        endTime: "2026-09-20T06:00:00Z",
+        stage: 7,
       },
     ],
   };
@@ -265,6 +270,11 @@ test("maps a sleep session with its stages and drops unknown stages", () => {
           {
             stage: "asleep",
             startAt: "2026-09-20T01:10:00Z",
+            endAt: "2026-09-20T02:00:00Z",
+          },
+          {
+            stage: "awake",
+            startAt: "2026-09-20T02:00:00Z",
             endAt: "2026-09-20T06:00:00Z",
           },
         ],

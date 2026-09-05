@@ -15,7 +15,8 @@ Invariants and gotchas:
 - Schema dumps are off (`--no-dump-schema`) because local pg_dump does not match Postgres 18.
 - `db/Dockerfile` bakes the migrations into a dbmate image; it is the `migrate` service in production.
 - `health_samples` is range partitioned by UTC month on `start_at`. Partitions are created at runtime by `ensure_health_samples_partition` and dropped by `drop_health_samples_partitions_before`; no migration creates monthly partitions. Its primary key includes `start_at` because a partitioned table's unique keys must contain the partition key.
-- Only apps/ingest writes `health_samples` and `sleep_sessions`.
+- Only apps/ingest writes `health_samples`, `sleep_sessions`, `metrics_recompute_queue`, `daily_aggregates`, `baselines`, `daily_scores` and `anomalies`, and only it inserts `outbox` rows.
+- `outbox.topic` is limited by a CHECK to `scores.updated` and `anomaly.detected`; a new topic is a migration.
 - `health_samples` partitions before 2002 belong to the drop tests in `apps/ingest/internal/store`; never create them anywhere else.
 - DDL that locks both `users` and `health_samples` must lock `users` first, the order a cascading user delete takes them; the reverse order deadlocks against account deletion.
 - Both partition functions set a 2 second `lock_timeout` after taking their advisory lock, so a long reader of `health_samples` (pg_dump) makes them fail with SQLSTATE 55P03 instead of queueing every ingest and `users` write behind their DDL. Callers treat that as a retryable error.

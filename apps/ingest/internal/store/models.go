@@ -8,7 +8,28 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type Anomaly struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	LocalDate  time.Time
+	Metric     string
+	ZScore     float64
+	Direction  string
+	NotifiedAt pgtype.Timestamptz
+	CreatedAt  time.Time
+}
+
+type Baseline struct {
+	UserID    uuid.UUID
+	LocalDate time.Time
+	Metric    string
+	Mean      float64
+	Stddev    float64
+	DayCount  int32
+}
 
 type Consent struct {
 	ID         uuid.UUID
@@ -16,6 +37,28 @@ type Consent struct {
 	Kind       string
 	Version    string
 	AcceptedAt time.Time
+}
+
+type DailyAggregate struct {
+	UserID      uuid.UUID
+	LocalDate   time.Time
+	Metric      string
+	MinValue    float64
+	AvgValue    float64
+	MaxValue    float64
+	SumValue    float64
+	SampleCount int32
+}
+
+type DailyScore struct {
+	UserID           uuid.UUID
+	LocalDate        time.Time
+	SleepScore       pgtype.Int2
+	RecoveryScore    pgtype.Int2
+	ActivityScore    pgtype.Int2
+	Inputs           []byte
+	AlgorithmVersion int32
+	ComputedAt       time.Time
 }
 
 type HealthSample struct {
@@ -27,6 +70,21 @@ type HealthSample struct {
 	Value        float64
 	Unit         string
 	Source       string
+}
+
+type MetricsRecomputeQueue struct {
+	UserID        uuid.UUID
+	FromLocalDate time.Time
+	Generation    int64
+	RequestedAt   time.Time
+}
+
+type Outbox struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Topic     string
+	Payload   []byte
+	CreatedAt time.Time
 }
 
 type SleepSession struct {

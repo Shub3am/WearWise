@@ -12,12 +12,17 @@ export const backgroundSyncTaskName = "wearwise-health-sync";
 export async function syncFromBackground(): Promise<BackgroundTask.BackgroundTaskResult> {
   const config = readPublicConfig();
   if (config === undefined) return BackgroundTask.BackgroundTaskResult.Failed;
-  const result = await syncHealthData(config.ingestUrl, () =>
-    getBackgroundSessionToken(config.clerkPublishableKey),
-  );
-  return result.outcome === "stored"
-    ? BackgroundTask.BackgroundTaskResult.Success
-    : BackgroundTask.BackgroundTaskResult.Failed;
+  try {
+    const result = await syncHealthData(config.ingestUrl, () =>
+      getBackgroundSessionToken(config.clerkPublishableKey),
+    );
+    return result.outcome === "stored"
+      ? BackgroundTask.BackgroundTaskResult.Success
+      : BackgroundTask.BackgroundTaskResult.Failed;
+  } catch {
+    // A background wake with no network makes fetch throw, which is normal, not a bug to surface.
+    return BackgroundTask.BackgroundTaskResult.Failed;
+  }
 }
 
 // expo-task-manager finds a task's handler only if it was defined at module scope during the launch that runs it.

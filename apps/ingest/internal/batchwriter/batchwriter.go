@@ -1,4 +1,4 @@
-// Why: stores one validated batch for one user so that resending it changes nothing.
+// Why: stores one validated batch for one user, with the metrics recompute it calls for, so that resending it changes nothing.
 // Must not: validate input or decide who the user is.
 package batchwriter
 
@@ -48,18 +48,45 @@ func Write(ctx context.Context, pool *pgxpool.Pool, userID uuid.UUID, batch samp
 	}
 	return pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
 		transactionQueries := queries.WithTx(tx)
+		var changedSampleCount, changedSleepSessionCount int64
 		if len(samples) > 0 {
-			if _, err := transactionQueries.UpsertHealthSamples(ctx, healthSampleColumns(userID, samples)); err != nil {
+			if changedSampleCount, err = transactionQueries.UpsertHealthSamples(ctx, healthSampleColumns(userID, samples)); err != nil {
 				return fmt.Errorf("upsert health samples: %w", err)
 			}
 		}
 		if len(sleepSessions) > 0 {
-			if _, err := transactionQueries.UpsertSleepSessions(ctx, sleepSessionParams); err != nil {
+			if changedSleepSessionCount, err = transactionQueries.UpsertSleepSessions(ctx, sleepSessionParams); err != nil {
 				return fmt.Errorf("upsert sleep sessions: %w", err)
 			}
 		}
+		if changedSampleCount+changedSleepSessionCount == 0 {
+			return nil
+		}
+		if err := transactionQueries.MarkMetricsStale(ctx, store.MarkMetricsStaleParams{
+			EarliestChangedAt: earliestChangedAt(samples, sleepSessions),
+			UserID:            userID,
+		}); err != nil {
+			return fmt.Errorf("mark metrics stale: %w", err)
+		}
 		return nil
 	})
+}
+
+// earliestChangedAt takes a session's start, not the end its night is dated by, so a night whose end moved to a
+// later date still recomputes the date it used to end on.
+func earliestChangedAt(samples []samplebatch.Sample, sleepSessions []samplebatch.SleepSession) time.Time {
+	var earliest time.Time
+	for _, sample := range samples {
+		if earliest.IsZero() || sample.StartAt.Before(earliest) {
+			earliest = sample.StartAt
+		}
+	}
+	for _, session := range sleepSessions {
+		if earliest.IsZero() || session.StartAt.Before(earliest) {
+			earliest = session.StartAt
+		}
+	}
+	return earliest
 }
 
 func healthSampleColumns(userID uuid.UUID, samples []samplebatch.Sample) store.UpsertHealthSamplesParams {

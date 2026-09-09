@@ -59,6 +59,24 @@ test("asks HealthKit on iOS, then goes home", async () => {
   expect(requestHealthConnectAccess).not.toHaveBeenCalled();
 });
 
+test("tells the user when the Health Connect permission request fails", async () => {
+  jest.replaceProperty(Platform, "OS", "android");
+  jest
+    .mocked(requestHealthConnectAccess)
+    .mockRejectedValue(new Error("activity not found"));
+  render(<HealthAccessScreen />);
+  fireEvent.press(screen.getByRole("button", { name: /continue/i }));
+  expect(
+    await screen.findByText(
+      "WearWise could not open the Health Connect permission screen. Try again.",
+    ),
+  ).toBeTruthy();
+  expect(
+    await appKeyValueStore.getItemAsync(healthAccessRequestedKey),
+  ).toBeNull();
+  expect(replace).not.toHaveBeenCalled();
+});
+
 test("stays and explains when Health Connect is not available", async () => {
   jest.replaceProperty(Platform, "OS", "android");
   jest.mocked(requestHealthConnectAccess).mockResolvedValue(false);

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { consents, createDatabase, users } from "@wearwise/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { buildApp } from "../app.ts";
@@ -120,14 +120,16 @@ describe("PATCH /v1/me", () => {
     const response = await patchMe(token, { timezone: "asia/kolkata" });
     expect(response.statusCode).toBe(200);
     expect(response.json().timezone).toBe("Asia/Kolkata");
+    // Compared in Postgres: a JS Date keeps milliseconds, and the create and the update can share one.
     const [row] = await database
-      .select()
+      .select({
+        timezone: users.timezone,
+        updatedAfterCreated: sql<boolean>`${users.updatedAt} > ${users.createdAt}`,
+      })
       .from(users)
       .where(eq(users.clerkUserId, clerkUserId));
     expect(row?.timezone).toBe(response.json().timezone);
-    expect(row?.updatedAt.getTime()).toBeGreaterThan(
-      row?.createdAt.getTime() ?? Number.POSITIVE_INFINITY,
-    );
+    expect(row?.updatedAfterCreated).toBe(true);
   });
 
   test("rejects a UTC offset", async () => {

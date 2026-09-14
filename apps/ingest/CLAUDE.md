@@ -24,5 +24,6 @@ Invariants and gotchas:
 - A partition is dropped only when its whole month ends before now minus 90 days, and the loop runs daily, so raw samples live 90 to about 121 days. A batch writing into a month the loop is dropping at that moment can fail with a 500 and is retried by the app.
 - `BenchmarkPostSamples` is the throughput baseline: `go -C apps/ingest test -run '^$' -bench . -benchtime=20x ./internal/ingesthttp`. It needs the migrated `wearwise_test` and runs in process, so it excludes network time. Rerun it and compare before claiming ingest got faster.
 - Metrics days are local dates in `users.timezone`: a sample counts toward the date its start falls on, and a night of sleep toward the date it ends on. When two sessions end on one date, the one with more asleep minutes is the night. A session with no asleep, light, deep or rem stage (in bed only) counts its whole span as asleep, with no efficiency and no deep and REM share.
+- A baseline for a date uses the 28 days before it, never the date itself, needs at least 14 of them with a value, and never lets the standard deviation fall below the metric's floor in `baseline.StddevFloorByMetric`. Only the metrics in that map get baselines and z scores.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

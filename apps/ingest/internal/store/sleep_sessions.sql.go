@@ -12,6 +12,53 @@ import (
 	"github.com/google/uuid"
 )
 
+const listSleepSessionsEndingBetween = `-- name: ListSleepSessionsEndingBetween :many
+SELECT start_at, end_at, stages
+FROM sleep_sessions
+WHERE user_id = $1::uuid
+  AND end_at >= ($3::date::timestamp AT TIME ZONE $2::text)
+  AND end_at < (($4::date + 1)::timestamp AT TIME ZONE $2::text)
+ORDER BY end_at
+`
+
+type ListSleepSessionsEndingBetweenParams struct {
+	UserID        uuid.UUID
+	TimeZone      string
+	FromLocalDate time.Time
+	ToLocalDate   time.Time
+}
+
+type ListSleepSessionsEndingBetweenRow struct {
+	StartAt time.Time
+	EndAt   time.Time
+	Stages  []byte
+}
+
+func (q *Queries) ListSleepSessionsEndingBetween(ctx context.Context, arg ListSleepSessionsEndingBetweenParams) ([]ListSleepSessionsEndingBetweenRow, error) {
+	rows, err := q.db.Query(ctx, listSleepSessionsEndingBetween,
+		arg.UserID,
+		arg.TimeZone,
+		arg.FromLocalDate,
+		arg.ToLocalDate,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSleepSessionsEndingBetweenRow
+	for rows.Next() {
+		var i ListSleepSessionsEndingBetweenRow
+		if err := rows.Scan(&i.StartAt, &i.EndAt, &i.Stages); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertSleepSessions = `-- name: UpsertSleepSessions :execrows
 INSERT INTO sleep_sessions (user_id, external_uuid, start_at, end_at, source, stages)
 SELECT

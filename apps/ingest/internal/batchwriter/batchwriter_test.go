@@ -180,3 +180,76 @@ func TestWriteUpdatesChangedSleepStages(t *testing.T) {
 		t.Fatalf("got stages %+v, want %+v", got, revisedStages)
 	}
 }
+
+func setTimeZone(t *testing.T, pool *pgxpool.Pool, userID uuid.UUID, timeZone string) {
+	t.Helper()
+	if _, err := pool.Exec(t.Context(), "UPDATE users SET timezone = $2 WHERE id = $1", userID, timeZone); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func queuedRecompute(t *testing.T, pool *pgxpool.Pool, userID uuid.UUID) (fromLocalDate time.Time, generation int64) {
+	t.Helper()
+	err := pool.QueryRow(t.Context(),
+		"SELECT from_local_date, generation FROM metrics_recompute_queue WHERE user_id = $1", userID,
+	).Scan(&fromLocalDate, &generation)
+	if err != nil {
+		t.Fatalf("read metrics_recompute_queue: %v", err)
+	}
+	return fromLocalDate, generation
+}
+
+func TestWriteQueuesARecomputeFromTheEarliestLocalDate(t *testing.T) {
+	pool := testdatabase.Open(t)
+	userID, _ := testdatabase.CreateConsentedUser(t, pool)
+	setTimeZone(t, pool, userID, "Asia/Kolkata")
+	writeBatch(t, pool, userID, samplebatch.Batch{Samples: []samplebatch.Sample{
+		heartRateSample("hr-late", time.Date(2026, 8, 15, 10, 0, 0, 0, time.UTC), 61),
+		heartRateSample("hr-early", time.Date(2026, 8, 14, 19, 0, 0, 0, time.UTC), 64),
+	}})
+	fromLocalDate, generation := queuedRecompute(t, pool, userID)
+	if want := time.Date(2026, 8, 15, 0, 0, 0, 0, time.UTC); !fromLocalDate.Equal(want) || generation != 1 {
+		t.Fatalf("queued from %s generation %d, want from 2026-08-15 (19:00Z is 00:30 IST) generation 1", fromLocalDate, generation)
+	}
+}
+
+func TestWriteResentBatchQueuesNoNewRecompute(t *testing.T) {
+	pool := testdatabase.Open(t)
+	userID, _ := testdatabase.CreateConsentedUser(t, pool)
+	batch := samplebatch.Batch{Samples: []samplebatch.Sample{heartRateSample("hr-1", recentStartAt(), 61)}}
+	writeBatch(t, pool, userID, batch)
+	writeBatch(t, pool, userID, batch)
+	if _, generation := queuedRecompute(t, pool, userID); generation != 1 {
+		t.Fatalf("generation = %d after a resend, want 1", generation)
+	}
+}
+
+func TestWriteChangedBatchMovesTheQueuedDateEarlier(t *testing.T) {
+	pool := testdatabase.Open(t)
+	userID, _ := testdatabase.CreateConsentedUser(t, pool)
+	writeBatch(t, pool, userID, samplebatch.Batch{Samples: []samplebatch.Sample{
+		heartRateSample("hr-1", time.Date(2026, 8, 15, 10, 0, 0, 0, time.UTC), 61),
+	}})
+	writeBatch(t, pool, userID, samplebatch.Batch{Samples: []samplebatch.Sample{
+		heartRateSample("hr-2", time.Date(2026, 8, 10, 10, 0, 0, 0, time.UTC), 64),
+	}})
+	writeBatch(t, pool, userID, samplebatch.Batch{Samples: []samplebatch.Sample{
+		heartRateSample("hr-3", time.Date(2026, 8, 20, 10, 0, 0, 0, time.UTC), 66),
+	}})
+	fromLocalDate, generation := queuedRecompute(t, pool, userID)
+	if want := time.Date(2026, 8, 10, 0, 0, 0, 0, time.UTC); !fromLocalDate.Equal(want) || generation != 3 {
+		t.Fatalf("queued from %s generation %d, want from 2026-08-10 generation 3", fromLocalDate, generation)
+	}
+}
+
+func TestWriteSleepOnlyBatchQueuesFromTheSessionStart(t *testing.T) {
+	pool := testdatabase.Open(t)
+	userID, _ := testdatabase.CreateConsentedUser(t, pool)
+	setTimeZone(t, pool, userID, "Asia/Kolkata")
+	writeBatch(t, pool, userID, samplebatch.Batch{SleepSessions: []samplebatch.SleepSession{
+		nightOfSleep("night-1", threeStages(time.Date(2026, 8, 14, 17, 0, 0, 0, time.UTC))),
+	}})
+	if fromLocalDate, _ := queuedRecompute(t, pool, userID); !fromLocalDate.Equal(time.Date(2026, 8, 14, 0, 0, 0, 0, time.UTC)) {
+		t.Fatalf("queued from %s, want 2026-08-14 (17:00Z is 22:30 IST)", fromLocalDate)
+	}
+}

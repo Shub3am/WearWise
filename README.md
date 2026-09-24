@@ -6,7 +6,7 @@ It started as a Code for Bharat prototype. The original backend and frontend his
 
 ## Status
 
-Work in progress on branch `rebuild`. What runs today:
+Work in progress. What runs today:
 
 | Part | Folder | State |
 |------|--------|-------|
@@ -112,7 +112,7 @@ pnpm db:rollback   # undo the last one
 
 ## Deploy
 
-GitHub Actions (`.github/workflows/ci.yml`) runs lint, typecheck and tests on every push. A green push to `rebuild` then triggers a deploy of `infra/compose.prod.yml` through Coolify's API, once the `COOLIFY_URL`, `COOLIFY_TOKEN` and `COOLIFY_APP_UUID` secrets are set. Until then the deploy step is skipped. The Coolify setup checklist is in `infra/CLAUDE.md`.
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, typecheck and tests on every push. A green push to `main` then triggers a deploy of `infra/compose.prod.yml` through Coolify's API, once the `COOLIFY_URL`, `COOLIFY_TOKEN` and `COOLIFY_APP_UUID` secrets are set. Until then the deploy step is skipped. The Coolify setup checklist is in `infra/CLAUDE.md`.
 
 ## Repository layout
 

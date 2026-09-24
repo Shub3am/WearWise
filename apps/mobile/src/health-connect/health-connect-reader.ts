@@ -8,6 +8,7 @@ import {
   readRecords,
 } from "react-native-health-connect";
 import type { KeyValueStore } from "../storage/key-value-store.ts";
+import { backfillStartDate } from "../sync/backfill-window.ts";
 import type { SyncPage } from "../sync/run-sync.ts";
 import type { SampleBatch } from "../sync-batches/wire-types.ts";
 import {
@@ -19,8 +20,6 @@ import {
 } from "./health-connect-records.ts";
 
 const changesTokenKey = "health-connect-changes-token";
-const backfillDays = 90;
-const dayMillis = 24 * 60 * 60 * 1000;
 
 type SavedChangesToken = {
   changesToken: string;
@@ -89,9 +88,7 @@ async function* backfill(
 ): AsyncGenerator<SyncPage> {
   // Minted before reading, so a record written during the backfill arrives through the changes feed next time.
   const { nextChangesToken } = await getChanges({ recordTypes });
-  const startTime = new Date(
-    Date.now() - backfillDays * dayMillis,
-  ).toISOString();
+  const startTime = backfillStartDate().toISOString();
   const skipCursor = async () => {};
   for (const recordType of recordTypes) {
     let pageToken: string | undefined;

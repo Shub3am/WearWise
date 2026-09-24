@@ -2,6 +2,7 @@
 // changed since the last stored page.
 // Must not: post, encode or filter; runSync does that.
 import {
+  type CategoryTypeIdentifier,
   queryCategorySamples,
   queryCategorySamplesWithAnchor,
   queryQuantitySamplesWithAnchor,
@@ -52,6 +53,27 @@ async function* anchoredPages<Sample>(
     };
     anchor = newAnchor;
   }
+}
+
+function anchoredCategoryPages(
+  store: KeyValueStore,
+  metricId: string,
+  identifier: CategoryTypeIdentifier,
+  toBatch: (
+    samples: readonly HealthKitCategorySample[],
+  ) => Promise<SampleBatch> | SampleBatch,
+): AsyncGenerator<SyncPage> {
+  return anchoredPages(
+    store,
+    `healthkit-anchor:${metricId}`,
+    (anchor) =>
+      queryCategorySamplesWithAnchor(identifier, {
+        limit: pageLimit,
+        anchor,
+        filter: backfillFilter(),
+      }),
+    toBatch,
+  );
 }
 
 async function sleepSessionsAround(
@@ -105,29 +127,19 @@ export async function* readHealthKitPages(
       }),
     );
   }
-  yield* anchoredPages(
+  yield* anchoredCategoryPages(
     store,
-    "healthkit-anchor:stand_hours",
-    (anchor) =>
-      queryCategorySamplesWithAnchor("HKCategoryTypeIdentifierAppleStandHour", {
-        limit: pageLimit,
-        anchor,
-        filter: backfillFilter(),
-      }),
+    "stand_hours",
+    "HKCategoryTypeIdentifierAppleStandHour",
     (samples) => ({
       samples: samples.flatMap((sample) => standHourToWireSample(sample) ?? []),
       sleepSessions: [],
     }),
   );
-  yield* anchoredPages(
+  yield* anchoredCategoryPages(
     store,
-    "healthkit-anchor:sleep_analysis",
-    (anchor) =>
-      queryCategorySamplesWithAnchor("HKCategoryTypeIdentifierSleepAnalysis", {
-        limit: pageLimit,
-        anchor,
-        filter: backfillFilter(),
-      }),
+    "sleep_analysis",
+    "HKCategoryTypeIdentifierSleepAnalysis",
     sleepSessionsAround,
   );
 }

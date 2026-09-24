@@ -16,5 +16,6 @@ Invariants and gotchas:
 - Health Connect record ids are the external uuids; a heart rate record's points become `<record id>:<point time>`. Android syncs no `basal_energy`, `exercise_time` or `walking_speed` (Health Connect's Speed record covers every activity), so scores built on them must treat them as iOS only.
 - A sync cursor (HealthKit anchor, Health Connect changes token) is saved only after every batch of its page answered 204. Any other answer stops the sync and the page is sent again next time; ingest is idempotent on external uuid, so the resend stores nothing twice. A page ingest keeps rejecting (a 400 the acceptance filter misses) stalls sync on that page, which is why the filter must mirror ingest.
 - Cursors live only on the device (`expo-sqlite/kv-store`). Reinstalling the app or clearing its data starts a fresh 90 day backfill.
+- One sync runs at a time (`singleFlight`); a call during a run gets that run's result.
 
 Callers: none (it is the client). It calls `apps/api` and `apps/ingest` over HTTP.

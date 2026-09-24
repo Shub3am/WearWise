@@ -7,6 +7,7 @@ import type {
   WireSample,
   WireSleepSession,
 } from "./wire-types.ts";
+import { sleepStageNames } from "./wire-types.ts";
 
 const maxExternalUuidRunes = 128;
 const maxSourceRunes = 256;
@@ -60,6 +61,7 @@ function keepAcceptedSession(
     const stageStart = instantMillis(stage.startAt);
     const stageEnd = instantMillis(stage.endAt);
     return (
+      sleepStageNames.includes(stage.stage) &&
       stageStart !== undefined &&
       stageEnd !== undefined &&
       stageStart <= stageEnd &&

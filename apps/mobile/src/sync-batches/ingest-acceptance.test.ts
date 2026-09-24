@@ -1,5 +1,9 @@
 import { keepWhatIngestAccepts } from "./ingest-acceptance.ts";
-import type { WireSample, WireSleepSession } from "./wire-types.ts";
+import type {
+  SleepStageName,
+  WireSample,
+  WireSleepSession,
+} from "./wire-types.ts";
 
 const validSample: WireSample = {
   metric: "step_count",
@@ -79,6 +83,22 @@ test("drops a stage that runs past its session and keeps the session", () => {
   const session = {
     ...validSession,
     stages: [...validSession.stages, lateStage],
+  };
+  expect(
+    keepWhatIngestAccepts({ samples: [], sleepSessions: [session] })
+      .sleepSessions,
+  ).toEqual([validSession]);
+});
+
+test("drops a stage whose name ingest does not accept and keeps the session", () => {
+  const unknownStage = {
+    stage: "napping" as unknown as SleepStageName,
+    startAt: "2026-09-19T23:00:00.000Z",
+    endAt: "2026-09-19T23:30:00.000Z",
+  };
+  const session = {
+    ...validSession,
+    stages: [...validSession.stages, unknownStage],
   };
   expect(
     keepWhatIngestAccepts({ samples: [], sleepSessions: [session] })

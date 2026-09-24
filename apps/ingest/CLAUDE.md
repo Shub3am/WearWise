@@ -25,5 +25,6 @@ Invariants and gotchas:
 - `BenchmarkPostSamples` is the throughput baseline: `go -C apps/ingest test -run '^$' -bench . -benchtime=20x ./internal/ingesthttp`. It needs the migrated `wearwise_test` and runs in process, so it excludes network time. Rerun it and compare before claiming ingest got faster.
 - Metrics days are local dates in `users.timezone`: a sample counts toward the date its start falls on, and a night of sleep toward the date it ends on. When two sessions end on one date, the one with more asleep minutes is the night. A session with no asleep, light, deep or rem stage (in bed only) counts its whole span as asleep, with no efficiency and no deep and REM share.
 - A baseline for a date uses the 28 days before it, never the date itself, needs at least 14 of them with a value, and never lets the standard deviation fall below the metric's floor in `baseline.StddevFloorByMetric`. Only the metrics in that map get baselines and z scores.
+- An anomaly is a metric at or beyond |z| 2 on the same side for two local dates in a row; a date with no value breaks the run. It is stored on the second date.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.

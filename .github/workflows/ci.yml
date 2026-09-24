@@ -70,7 +70,7 @@ jobs:
 
   deploy:
     needs: [checks, migrations, prod-stack]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/rebuild'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-production

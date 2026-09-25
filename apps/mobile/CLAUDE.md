@@ -26,5 +26,6 @@ Invariants and gotchas:
 - Onboarding order lives only in `nextOnboardingStep`: both consents at `consentNoticeVersion`, then one health access request, then home. Screens finish with `router.replace("/")` and home asks again. Changing any word of `consent-notice.ts` needs a new `consentNoticeVersion`, which sends every user back through consent. The health access flag (`health-access-requested`) is per install, because HealthKit never says whether access was granted.
 - The device time zone is compared after `canonicalTimeZone` from `@wearwise/contracts`, the same function the API applies, so a legacy device name never rewrites the saved zone.
 - Foreground sync starts only on the home screen: on mount and on its button it runs `fetchMe`, the onboarding check, the time zone update, then `syncHealthData`, in that order, because ingest answers 403 until the consent row exists.
+- `@clerk/expo`'s `useAuth` returns a new `getToken` closure on every render, so anything passed as a hook dependency must go through `useServerAccess`'s stable `ServerAccess`, never `getToken` directly.
 
 Callers: none (it is the client). It calls `apps/api` and `apps/ingest` over HTTP.

@@ -27,5 +27,9 @@ Invariants and gotchas:
 - A baseline for a date uses the 28 days before it, never the date itself, needs at least 14 of them with a value, and never lets the standard deviation fall below the metric's floor in `baseline.StddevFloorByMetric`. Only the metrics in that map get baselines and z scores.
 - An anomaly is a metric at or beyond |z| 2 on the same side for two local dates in a row; a date with no value breaks the run. It is stored on the second date.
 - `dailyscore` is versioned: any change to a weight, goal or curve bumps `AlgorithmVersion` and regenerates the recompute golden file. A missing input leaves its weight out of the score instead of counting as zero; a score with none of its inputs is NULL.
+- `RecomputeUser` runs one transaction per user: an advisory transaction lock (a second worker skips the user), then the `users` row `FOR KEY SHARE`, before any metrics row is touched. That order is what keeps a concurrent account deletion from deadlocking with it; the recompute waits for the deletion and then finds no user.
+- The recompute window starts no earlier than the first local date that raw sample retention still holds in full, so aggregates older than about 90 days are kept, never rebuilt from partial data. It ends today in the user's zone.
+- The queue row is deleted only if its `generation` is still the one the recompute started with; a batch that arrived meanwhile leaves it for the next pass.
+- Cumulative metrics (`cumulativeMetrics` in `recompute.go`: steps, walking and running distance, active and basal energy, exercise time, stand time and hours, flights, time in daylight) take the day's busiest source instead of summing sources, so a watch and a phone counting the same walk are not added together. Every other metric pools all sources.
 
 Callers: `apps/mobile` over HTTP (sub-project 3), CI.
